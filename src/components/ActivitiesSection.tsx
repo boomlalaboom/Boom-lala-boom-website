@@ -1,0 +1,114 @@
+import { Scissors, Download, Palette, Award } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
+
+export function ActivitiesSection() {
+  const { language, t } = useLanguage();
+
+  const activityTypes = [
+    {
+      icon: Palette,
+      title: language === 'fr' ? 'Coloriages' : language === 'en' ? 'Coloring Pages' : 'Páginas para Colorear',
+      description: language === 'fr'
+        ? 'Imprime et colorie tes personnages préférés'
+        : language === 'en'
+        ? 'Print and color your favorite characters'
+        : 'Imprime y colorea tus personajes favoritos',
+      color: 'from-pink-500 to-rose-500',
+      emoji: '🎨',
+    },
+    {
+      icon: Scissors,
+      title: language === 'fr' ? 'Découpages' : language === 'en' ? 'Paper Crafts' : 'Manualidades',
+      description: language === 'fr'
+        ? 'Crée tes propres jouets en papier'
+        : language === 'en'
+        ? 'Create your own paper toys'
+        : 'Crea tus propios juguetes de papel',
+      color: 'from-blue-500 to-cyan-500',
+      emoji: '✂️',
+    },
+    {
+      icon: Award,
+      title: language === 'fr' ? 'Jeux de cartes' : language === 'en' ? 'Card Games' : 'Juegos de Cartas',
+      description: language === 'fr'
+        ? 'Joue avec des cartes personnalisées'
+        : language === 'en'
+        ? 'Play with custom cards'
+        : 'Juega con tarjetas personalizadas',
+      color: 'from-purple-500 to-indigo-500',
+      emoji: '🃏',
+    },
+  ];
+
+  return (
+    <section id="activities" className="py-16 px-4 bg-gradient-to-br from-green-50 to-teal-50">
+      <div className="container mx-auto">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-teal-500 rounded-full mb-4">
+            <Scissors className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-4xl md:text-5xl font-black text-gray-800 mb-4">
+            {t('activities_page_title')}
+          </h2>
+          <p className="text-xl text-gray-600">{t('activities_page_subtitle')}</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {activityTypes.map((activity, index) => {
+            const Icon = activity.icon;
+            return (
+              <div
+                key={index}
+                className="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 animate-slide-up"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="text-center">
+                  <div
+                    className={`inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br ${activity.color} rounded-full mb-4 group-hover:scale-110 transition-transform`}
+                  >
+                    <span className="text-4xl">{activity.emoji}</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800 mb-3 group-hover:bg-gradient-to-r group-hover:from-green-600 group-hover:to-teal-600 group-hover:bg-clip-text group-hover:text-transparent transition-all">
+                    {activity.title}
+                  </h3>
+                  <p className="text-gray-600 mb-6">{activity.description}</p>
+
+                  <button
+                    className={`flex items-center justify-center space-x-2 w-full px-6 py-3 bg-gradient-to-r ${activity.color} text-white rounded-full font-bold shadow-lg hover:shadow-xl transition-all group-hover:scale-105`}
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>{t('download')}</span>
+                  </button>
+
+                  <div className="mt-4 text-sm text-gray-500">
+                    {language === 'fr' ? 'Format A4 - PDF' : language === 'en' ? 'A4 Format - PDF' : 'Formato A4 - PDF'}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-12 bg-white rounded-3xl p-8 shadow-lg">
+          <div className="flex items-start space-x-4">
+            <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
+              <span className="text-2xl">💡</span>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">
+                {language === 'fr' ? 'Conseils pour les parents' : language === 'en' ? 'Tips for Parents' : 'Consejos para Padres'}
+              </h3>
+              <p className="text-gray-600">
+                {language === 'fr'
+                  ? 'Toutes nos activités sont conçues pour développer la créativité et la motricité fine de votre enfant. Imprimez sur du papier épais pour de meilleurs résultats !'
+                  : language === 'en'
+                  ? 'All our activities are designed to develop your child\'s creativity and fine motor skills. Print on thick paper for best results!'
+                  : '¡Todas nuestras actividades están diseñadas para desarrollar la creatividad y las habilidades motoras finas de su hijo. Imprima en papel grueso para obtener mejores resultados!'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
