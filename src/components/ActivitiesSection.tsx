@@ -1,7 +1,12 @@
 import { Scissors, Download, Palette, Award } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
-export function ActivitiesSection() {
+interface ActivitiesSectionProps {
+  showHeader?: boolean;
+  variant?: 'blue' | 'yellow';
+}
+
+export function ActivitiesSection({ showHeader = true, variant = 'blue' }: ActivitiesSectionProps) {
   const { language, t } = useLanguage();
 
   const activityTypes = [
@@ -13,7 +18,7 @@ export function ActivitiesSection() {
         : language === 'en'
         ? 'Print and color your favorite characters'
         : 'Imprime y colorea tus personajes favoritos',
-      color: 'from-pink-500 to-rose-500',
+      color: 'from-[var(--brand-pink)] to-[var(--brand-orange)]',
       emoji: '🎨',
     },
     {
@@ -24,7 +29,7 @@ export function ActivitiesSection() {
         : language === 'en'
         ? 'Create your own paper toys'
         : 'Crea tus propios juguetes de papel',
-      color: 'from-blue-500 to-cyan-500',
+      color: 'from-[var(--brand-blue)] to-[var(--brand-teal)]',
       emoji: '✂️',
     },
     {
@@ -35,27 +40,31 @@ export function ActivitiesSection() {
         : language === 'en'
         ? 'Play with custom cards'
         : 'Juega con tarjetas personalizadas',
-      color: 'from-purple-500 to-indigo-500',
+      color: 'from-[var(--brand-green)] to-[var(--brand-sky)]',
       emoji: '🃏',
     },
   ];
 
   return (
-    <section id="activities" className="py-16 px-4 bg-gradient-to-br from-green-50 to-teal-50">
+    <section
+      id="activities"
+      className={`py-16 px-4 screen-section ${variant === 'blue' ? 'section-bg-blue' : 'section-bg-yellow'}`}
+    >
       <div className="container mx-auto">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-teal-500 rounded-full mb-4">
-            <Scissors className="w-8 h-8 text-white" />
+        {showHeader && (
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[var(--brand-green)] to-[var(--brand-teal)] rounded-full mb-4">
+              <Scissors className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="section-title">
+              {t('activities_page_title')}
+            </h2>
+            <p className="text-xl subtitle-text">{t('activities_page_subtitle')}</p>
           </div>
-          <h2 className="text-4xl md:text-5xl font-black text-gray-800 mb-4">
-            {t('activities_page_title')}
-          </h2>
-          <p className="text-xl text-gray-600">{t('activities_page_subtitle')}</p>
-        </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {activityTypes.map((activity, index) => {
-            const Icon = activity.icon;
             return (
               <div
                 key={index}
@@ -68,7 +77,7 @@ export function ActivitiesSection() {
                   >
                     <span className="text-4xl">{activity.emoji}</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-800 mb-3 group-hover:bg-gradient-to-r group-hover:from-green-600 group-hover:to-teal-600 group-hover:bg-clip-text group-hover:text-transparent transition-all">
+                  <h3 className="text-xl font-bold text-gray-800 mb-3 group-hover:bg-gradient-to-r group-hover:from-[var(--brand-green)] group-hover:to-[var(--brand-teal)] group-hover:bg-clip-text group-hover:text-transparent transition-all">
                     {activity.title}
                   </h3>
                   <p className="text-gray-600 mb-6">{activity.description}</p>
@@ -91,7 +100,7 @@ export function ActivitiesSection() {
 
         <div className="mt-12 bg-white rounded-3xl p-8 shadow-lg">
           <div className="flex items-start space-x-4">
-            <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
+            <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-[var(--brand-orange)] to-[var(--brand-pink)] rounded-full flex items-center justify-center">
               <span className="text-2xl">💡</span>
             </div>
             <div>

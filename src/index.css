@@ -2,13 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Freude';
+  src: url('/fonts/Freude.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Marvin';
+  src: url('/fonts/Marvin.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Marvin';
+  src: url('/fonts/Marvin-Round.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Marvin';
+  src: url('/fonts/Marvin-Shadow.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
+  :root {
+    --brand-cyan: #5af7ff;
+    --brand-yellow: #ffe600;
+    --brand-blue: #0457ba;
+    --brand-amber: #ffc300;
+    --brand-pink: #ff8de5;
+    --brand-lime: #bbff00;
+    --brand-violet: #7f5cff;
+    --brand-orange: #ff9f00;
+    --brand-red: #ff2c6a;
+    --brand-sky: #00b7ff;
+    --brand-green: #39b54a;
+    --brand-teal: #5af7ff;
+    --brand-surface: #f2f2f2;
+    --brand-surface-2: #e6e6e6;
+    --brand-ink: #1a1a1a;
+  }
+
   html {
     scroll-behavior: smooth;
   }
 
   body {
     @apply antialiased;
+    font-family: 'Freude', 'Marvin', 'Trebuchet MS', sans-serif;
+    color: var(--brand-ink);
+    background-color: var(--brand-surface);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Marvin', 'Freude', 'Trebuchet MS', sans-serif;
+    font-weight: 400 !important;
+    color: var(--brand-blue);
   }
 }
 
@@ -68,15 +127,37 @@
 
 @layer components {
   .gradient-text {
-    @apply bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent;
+    color: var(--brand-blue);
   }
 
   .btn-primary {
-    @apply px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(90deg, var(--brand-pink), var(--brand-orange));
+    color: #fff;
+    font-weight: 700;
+    border-radius: 9999px;
+    box-shadow: 0 12px 20px rgba(255, 147, 30, 0.25);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    transform: scale(1.05);
+    box-shadow: 0 16px 28px rgba(255, 147, 30, 0.35);
   }
 
   .btn-secondary {
-    @apply px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(90deg, var(--brand-blue), var(--brand-teal));
+    color: #fff;
+    font-weight: 700;
+    border-radius: 9999px;
+    box-shadow: 0 12px 20px rgba(63, 169, 245, 0.25);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .btn-secondary:hover {
+    transform: scale(1.05);
+    box-shadow: 0 16px 28px rgba(63, 169, 245, 0.35);
   }
 
   .card {
@@ -84,6 +165,53 @@
   }
 
   .section-title {
-    @apply text-4xl md:text-5xl font-black text-gray-800 mb-4;
+    @apply text-3xl md:text-4xl font-black mb-4;
+    color: var(--brand-blue);
   }
+
+  .subtitle-text {
+    color: var(--brand-sky);
+  }
+
+  .section-bg-yellow {
+    background: linear-gradient(135deg, #ffe600 0%, #ff9f00 100%);
+  }
+
+  .section-bg-blue {
+    background: linear-gradient(135deg, #00b7ff 0%, #0457ba 100%);
+  }
+
+  .section-bg-blue .section-title {
+    color: #ffe600;
+  }
+
+  .section-bg-blue .subtitle-text {
+    color: #ff9f00;
+  }
+
+  .section-bg-yellow .section-title {
+    color: #0457ba;
+  }
+
+  .section-bg-yellow .subtitle-text {
+    color: #00b7ff;
+  }
+
+  .screen-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+  }
+
+  .screen-section > .container {
+    width: 100%;
+  }
+
+  .footer-gradient-text {
+    background: linear-gradient(90deg, #ffe600 0%, #ff9f00 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
 }

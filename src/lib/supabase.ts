@@ -34,7 +34,9 @@ export interface Song {
   description_fr: string;
   description_en: string;
   description_es: string;
-  youtube_id: string;
+  youtube_id_fr: string;
+  youtube_id_en: string;
+  youtube_id_es: string;
   lyrics_fr?: string;
   lyrics_en?: string;
   lyrics_es?: string;
@@ -90,4 +92,33 @@ export interface Activity {
   age_min: number;
   age_max: number;
   download_count: number;
+}
+
+export interface Article {
+  id: string;
+  slug_fr: string;
+  slug_en: string;
+  slug_es: string;
+  title_fr: string;
+  title_en: string;
+  title_es: string;
+  excerpt_fr: string;
+  excerpt_en: string;
+  excerpt_es: string;
+  content_fr: string;
+  content_en: string;
+  content_es: string;
+  thumbnail_url: string;
+  author_name: string;
+  read_time_minutes: number;
+  is_featured: boolean;
+  published_at: string;
+  created_at: string;
+  updated_at: string;
+  meta_title_fr?: string;
+  meta_title_en?: string;
+  meta_title_es?: string;
+  meta_description_fr?: string;
+  meta_description_en?: string;
+  meta_description_es?: string;
 }

@@ -1,5 +1,6 @@
 import { ReactNode, useState } from 'react';
-import { Music, Gamepad2, Users, Scissors, Info, Globe } from 'lucide-react';
+import { Music, Gamepad2, Users, Scissors, Info, Globe, Sparkles, BookOpen, Folder, Mail, Heart, FileText } from 'lucide-react';
+import { Link, NavLink } from 'react-router-dom';
 import { useLanguage, Language } from '../contexts/LanguageContext';
 
 interface LayoutProps {
@@ -9,13 +10,26 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const { language, setLanguage, t } = useLanguage();
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
-  const navItems = [
-    { icon: Music, label: t('nav_songs'), id: 'songs' },
-    { icon: Gamepad2, label: t('nav_games'), id: 'games' },
-    { icon: Users, label: t('nav_characters'), id: 'characters' },
-    { icon: Scissors, label: t('nav_activities'), id: 'activities' },
+  const primaryNavItems = [
+    { icon: Sparkles, label: t('nav_about'), to: '/about' },
+    { icon: Music, label: t('nav_songs'), to: '/songs' },
+    { icon: Gamepad2, label: t('nav_games'), to: '/games' },
+    { icon: Users, label: t('nav_characters'), to: '/characters' },
+    { icon: Scissors, label: t('nav_activities'), to: '/activities' },
+    { icon: Heart, label: t('nav_parents'), to: '/parents' },
   ];
+
+  const secondaryNavItems = [
+    { icon: BookOpen, label: t('nav_learning'), to: '/learning' },
+    { icon: Folder, label: t('nav_resources'), to: '/resources' },
+    { icon: FileText, label: t('nav_blog'), to: '/blog' },
+    { icon: Info, label: t('nav_faq'), to: '/faq' },
+    { icon: Mail, label: t('nav_contact'), to: '/contact' },
+  ];
+
+  const footerNavItems = [...primaryNavItems, ...secondaryNavItems];
 
   const languages = [
     { code: 'fr' as Language, label: 'Français', flag: '🇫🇷' },
@@ -24,52 +38,89 @@ export function Layout({ children }: LayoutProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-yellow-50">
+    <div className="min-h-screen bg-gradient-to-br from-[#FFE600] to-[#FF9F00]">
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-sm shadow-md">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-20">
-            <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="flex items-center space-x-3 hover:scale-105 transition-transform"
+          <div className="grid grid-cols-[auto,1fr,auto] items-center gap-6 h-20">
+            <Link
+              to="/"
+              className="hover:scale-105 transition-transform -translate-x-[60px]"
             >
-              <img
-                src="/logo_boomlalaboom.png"
-                alt="BoomLaLaBoom"
-                className="h-12 w-auto"
-              />
-              <span className="text-2xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent hidden sm:inline">
-                BoomLaLaBoom
-              </span>
-            </button>
+              <div className="relative">
+                <img
+                  src="/logo_boomlalaboom.png"
+                  alt="BoomLaLaBoom"
+                  className="h-24 w-auto"
+                />
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 translate-x-[38px] text-2xl font-bold gradient-text hidden sm:inline">
+                  BoomLaLaBoom
+                </span>
+              </div>
+            </Link>
 
-            <nav className="hidden md:flex items-center space-x-2">
-              {navItems.map((item) => {
+            <nav className="hidden md:flex items-center justify-center gap-3 flex-wrap min-w-0 translate-x-[34px]">
+              {primaryNavItems.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      const element = document.getElementById(item.id);
-                      element?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="flex items-center space-x-2 px-4 py-2 rounded-full hover:bg-gradient-to-r hover:from-pink-100 hover:to-blue-100 transition-all duration-300 group"
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      `flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 group whitespace-nowrap ${isActive
+                        ? 'bg-gradient-to-r from-[rgba(255,123,172,0.2)] to-[rgba(255,147,30,0.2)]'
+                        : 'hover:bg-gradient-to-r hover:from-[rgba(255,123,172,0.18)] hover:to-[rgba(255,147,30,0.18)]'
+                      }`
+                    }
                   >
-                    <Icon className="w-5 h-5 text-pink-500 group-hover:scale-110 transition-transform" />
-                    <span className="font-medium text-gray-700 group-hover:text-pink-600">
+                    <Icon className="w-5 h-5 text-[var(--brand-pink)] group-hover:scale-110 transition-transform" />
+                    <span className="font-medium text-gray-700 group-hover:text-[var(--brand-red)]">
                       {item.label}
                     </span>
-                  </button>
+                  </NavLink>
                 );
               })}
+
+              <div className="relative">
+                <button
+                  onClick={() => setShowMoreMenu(!showMoreMenu)}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-full hover:bg-gradient-to-r hover:from-[rgba(255,123,172,0.18)] hover:to-[rgba(63,169,245,0.18)] transition-all duration-300 group"
+                >
+                  <Info className="w-5 h-5 text-[var(--brand-pink)] group-hover:scale-110 transition-transform" />
+                  <span className="font-medium text-gray-700 group-hover:text-[var(--brand-red)]">
+                    {t('nav_more')}
+                  </span>
+                </button>
+
+                {showMoreMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg overflow-hidden z-50">
+                    {secondaryNavItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <NavLink
+                          key={item.to}
+                          to={item.to}
+                          onClick={() => setShowMoreMenu(false)}
+                          className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-gradient-to-r hover:from-[rgba(255,123,172,0.12)] hover:to-[rgba(255,147,30,0.12)] transition-colors"
+                        >
+                          <Icon className="w-5 h-5 text-[var(--brand-pink)]" />
+                          <span className="font-medium text-gray-700">
+                            {item.label}
+                          </span>
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </nav>
 
             <div className="relative">
               <button
                 onClick={() => setShowLangMenu(!showLangMenu)}
-                className="flex items-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 hover:from-purple-200 hover:to-pink-200 transition-all"
+                className="flex items-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-[rgba(63,169,245,0.2)] to-[rgba(255,123,172,0.2)] hover:from-[rgba(63,169,245,0.3)] hover:to-[rgba(255,123,172,0.3)] transition-all"
               >
-                <Globe className="w-5 h-5 text-purple-600" />
-                <span className="font-medium text-purple-700 uppercase">
+                <Globe className="w-5 h-5 text-[var(--brand-blue)]" />
+                <span className="font-medium text-[var(--brand-blue)] uppercase">
                   {language}
                 </span>
               </button>
@@ -83,9 +134,8 @@ export function Layout({ children }: LayoutProps) {
                         setLanguage(lang.code);
                         setShowLangMenu(false);
                       }}
-                      className={`w-full flex items-center space-x-3 px-4 py-3 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 transition-colors ${
-                        language === lang.code ? 'bg-purple-50' : ''
-                      }`}
+                      className={`w-full flex items-center space-x-3 px-4 py-3 hover:bg-gradient-to-r hover:from-[rgba(63,169,245,0.12)] hover:to-[rgba(255,123,172,0.12)] transition-colors ${language === lang.code ? 'bg-[rgba(63,169,245,0.12)]' : ''
+                        }`}
                     >
                       <span className="text-2xl">{lang.flag}</span>
                       <span className="font-medium text-gray-700">
@@ -99,22 +149,24 @@ export function Layout({ children }: LayoutProps) {
           </div>
 
           <div className="md:hidden flex overflow-x-auto pb-3 space-x-2 scrollbar-hide">
-            {navItems.map((item) => {
+            {[...primaryNavItems, ...secondaryNavItems].map((item) => {
               const Icon = item.icon;
               return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    const element = document.getElementById(item.id);
-                    element?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="flex flex-col items-center space-y-1 px-4 py-2 rounded-2xl bg-white hover:bg-gradient-to-br hover:from-pink-50 hover:to-blue-50 transition-all whitespace-nowrap"
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `flex flex-col items-center space-y-1 px-4 py-2 rounded-2xl bg-white transition-all whitespace-nowrap ${isActive
+                      ? 'bg-gradient-to-br from-[rgba(255,123,172,0.18)] to-[rgba(255,147,30,0.18)]'
+                      : 'hover:bg-gradient-to-br hover:from-[rgba(255,123,172,0.12)] hover:to-[rgba(255,147,30,0.12)]'
+                    }`
+                  }
                 >
-                  <Icon className="w-6 h-6 text-pink-500" />
+                  <Icon className="w-6 h-6 text-[var(--brand-pink)]" />
                   <span className="text-xs font-medium text-gray-600">
                     {item.label}
                   </span>
-                </button>
+                </NavLink>
               );
             })}
           </div>
@@ -123,32 +175,74 @@ export function Layout({ children }: LayoutProps) {
 
       <main>{children}</main>
 
-      <footer className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white py-8 mt-16">
+      <footer className="bg-[#0457BA] text-[#FFE600] py-12">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
-            <div className="flex items-center space-x-3">
-              <img
-                src="/logo_boomlalaboom.png"
-                alt="BoomLaLaBoom"
-                className="h-10 w-auto"
-              />
-              <span className="text-xl font-bold">BoomLaLaBoom</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+            <div className="space-y-3">
+              <div className="relative inline-block -translate-x-[53px]">
+                <img
+                  src="/logo_boomlalaboom.png"
+                  alt="BoomLaLaBoom"
+                  className="h-24 w-auto"
+                />
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 translate-x-[38px] text-2xl font-bold footer-gradient-text">
+                  BoomLaLaBoom
+                </span>
+              </div>
+              <p className="text-sm md:text-base translate-x-[15px]">
+                {t('footer_tagline')}
+              </p>
+              <Link
+                to="/parents"
+                className="inline-flex items-center space-x-2 px-5 py-2 border-2 border-[#FFE600] rounded-full hover:bg-[#FFE600] hover:text-[#0457BA] transition-all translate-x-[15px]"
+              >
+                <Info className="w-5 h-5" />
+                <span className="font-medium">{t('nav_parents')}</span>
+              </Link>
             </div>
 
-            <button
-              onClick={() => {
-                const element = document.getElementById('parents');
-                element?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="flex items-center space-x-2 px-6 py-3 bg-white/20 hover:bg-white/30 rounded-full transition-all"
-            >
-              <Info className="w-5 h-5" />
-              <span className="font-medium">{t('nav_parents')}</span>
-            </button>
+            <div>
+              <h4 className="text-lg font-bold footer-gradient-text mb-3">
+                {t('footer_nav_title')}
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {footerNavItems.map((item) => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className="px-4 py-2 rounded-full border-2 border-[#FFE600] text-sm hover:bg-[#FFE600] hover:text-[#0457BA] transition-all"
+                  >
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-lg font-bold footer-gradient-text mb-3">
+                {t('footer_contact_title')}
+              </h4>
+              <div className="space-y-2">
+                <a
+                  href="mailto:contact@boomlalaboom.com"
+                  className="inline-flex items-center space-x-2 transition-colors"
+                >
+                  <Mail className="w-5 h-5" />
+                  <span className="footer-gradient-text">contact@boomlalaboom.com</span>
+                </a>
+                <div className="inline-flex items-center space-x-2">
+                  <Info className="w-5 h-5" />
+                  <span className="footer-gradient-text">
+                    {language === 'fr' ? 'Lun-Ven 9h-18h' : language === 'en' ? 'Mon-Fri 9am-6pm' : 'Lun-Vie 9h-18h'}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="text-center mt-6 text-sm text-white/80">
+          <div className="text-center mt-8 text-sm">
             © 2024 BoomLaLaBoom. {language === 'fr' ? 'Tous droits réservés' : language === 'en' ? 'All rights reserved' : 'Todos los derechos reservados'}.
+            <Link to="/login" className="ml-4 text-xs opacity-50 hover:opacity-100 transition-opacity">Admin</Link>
           </div>
         </div>
       </footer>

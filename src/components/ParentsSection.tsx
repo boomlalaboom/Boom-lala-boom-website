@@ -1,7 +1,12 @@
 import { Info, Shield, Heart, BookOpen, Mail } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
-export function ParentsSection() {
+interface ParentsSectionProps {
+  showHeader?: boolean;
+  variant?: 'blue' | 'yellow';
+}
+
+export function ParentsSection({ showHeader = true, variant = 'blue' }: ParentsSectionProps) {
   const { language } = useLanguage();
 
   const features = [
@@ -35,23 +40,28 @@ export function ParentsSection() {
   ];
 
   return (
-    <section id="parents" className="py-16 px-4 bg-gradient-to-br from-indigo-50 to-purple-50">
+    <section
+      id="parents"
+      className={`py-16 px-4 screen-section ${variant === 'blue' ? 'section-bg-blue' : 'section-bg-yellow'}`}
+    >
       <div className="container mx-auto">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full mb-4">
-            <Info className="w-8 h-8 text-white" />
+        {showHeader && (
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[var(--brand-blue)] to-[var(--brand-pink)] rounded-full mb-4">
+              <Info className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="section-title">
+              {language === 'fr' ? 'Espace Parents' : language === 'en' ? 'Parents Area' : 'Área de Padres'}
+            </h2>
+            <p className="text-xl subtitle-text">
+              {language === 'fr'
+                ? 'Tout ce que vous devez savoir sur BoomLaLaBoom'
+                : language === 'en'
+                ? 'Everything you need to know about BoomLaLaBoom'
+                : 'Todo lo que necesita saber sobre BoomLaLaBoom'}
+            </p>
           </div>
-          <h2 className="text-4xl md:text-5xl font-black text-gray-800 mb-4">
-            {language === 'fr' ? 'Espace Parents' : language === 'en' ? 'Parents Area' : 'Área de Padres'}
-          </h2>
-          <p className="text-xl text-gray-600">
-            {language === 'fr'
-              ? 'Tout ce que vous devez savoir sur BoomLaLaBoom'
-              : language === 'en'
-              ? 'Everything you need to know about BoomLaLaBoom'
-              : 'Todo lo que necesita saber sobre BoomLaLaBoom'}
-          </p>
-        </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           {features.map((feature, index) => {
@@ -63,10 +73,10 @@ export function ParentsSection() {
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full mb-4">
-                    <Icon className="w-8 h-8 text-indigo-600" />
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[rgba(63,169,245,0.2)] to-[rgba(255,123,172,0.2)] rounded-full mb-4">
+                    <Icon className="w-8 h-8 text-[var(--brand-blue)]" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                  <h3 className="text-xl font-bold text-gray-800 mb-3">
                     {feature.title}
                   </h3>
                   <p className="text-gray-600 leading-relaxed">
@@ -80,7 +90,7 @@ export function ParentsSection() {
 
         <div className="bg-white rounded-3xl p-8 md:p-12 shadow-lg">
           <div className="max-w-3xl mx-auto">
-            <h3 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+            <h3 className="text-xl font-bold text-gray-800 mb-6 text-center">
               {language === 'fr'
                 ? 'Notre Mission'
                 : language === 'en'
@@ -95,7 +105,7 @@ export function ParentsSection() {
                 : 'La misión de BoomLaLaBoom es crear un ambiente de aprendizaje alegre y estimulante para niños de todo el mundo. A través de nuestras canciones multilingües, juegos educativos y personajes adorables, ayudamos a los niños a desarrollar sus habilidades lingüísticas, cognitivas y creativas mientras se divierten.'}
             </p>
 
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6">
+            <div className="bg-gradient-to-r from-[rgba(63,169,245,0.12)] to-[rgba(255,123,172,0.12)] rounded-2xl p-6">
               <h4 className="text-xl font-bold text-gray-800 mb-3">
                 {language === 'fr'
                   ? 'Bénéfices pour votre enfant'
@@ -148,7 +158,7 @@ export function ParentsSection() {
             </div>
 
             <div className="mt-8 text-center">
-              <button className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all">
+              <button className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-pink)] text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105">
                 <Mail className="w-5 h-5" />
                 <span>
                   {language === 'fr'

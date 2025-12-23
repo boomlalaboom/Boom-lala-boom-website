@@ -1,26 +1,36 @@
-import { Gamepad2, Star, Zap } from 'lucide-react';
+import { Gamepad2, Star, Zap, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Game } from '../lib/supabase';
 
 interface GamesSectionProps {
   games: Game[];
+  showHeader?: boolean;
+  showViewMore?: boolean;
+  viewMoreTo?: string;
 }
 
-export function GamesSection({ games }: GamesSectionProps) {
+export function GamesSection({
+  games,
+  showHeader = true,
+  showViewMore = false,
+  viewMoreTo = '/games',
+}: GamesSectionProps) {
   const { language, t } = useLanguage();
 
-  const getLocalizedText = (obj: any, field: string) => {
-    return obj?.[`${field}_${language}`] || obj?.[`${field}_fr`] || '';
+  const getLocalizedText = (obj: Game, field: string) => {
+    const key = `${field}_${language}` as keyof Game;
+    return (obj[key] as string) || (obj[`${field}_fr` as keyof Game] as string) || '';
   };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'easy':
-        return 'bg-green-100 text-green-700';
+        return 'bg-[rgba(122,201,67,0.2)] text-[var(--brand-green)]';
       case 'medium':
-        return 'bg-yellow-100 text-yellow-700';
+        return 'bg-[rgba(255,147,30,0.2)] text-[var(--brand-orange)]';
       case 'hard':
-        return 'bg-red-100 text-red-700';
+        return 'bg-[rgba(255,29,37,0.2)] text-[var(--brand-red)]';
       default:
         return 'bg-gray-100 text-gray-700';
     }
@@ -42,17 +52,19 @@ export function GamesSection({ games }: GamesSectionProps) {
   };
 
   return (
-    <section id="games" className="py-16 px-4 bg-gradient-to-br from-blue-50 to-cyan-50">
+    <section id="games" className="py-16 px-4 section-bg-yellow screen-section">
       <div className="container mx-auto">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full mb-4">
-            <Gamepad2 className="w-8 h-8 text-white" />
+        {showHeader && (
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[var(--brand-blue)] to-[var(--brand-teal)] rounded-full mb-4">
+              <Gamepad2 className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="section-title">
+              {t('home_games_title')}
+            </h2>
+            <p className="text-xl subtitle-text">{t('games_page_subtitle')}</p>
           </div>
-          <h2 className="text-4xl md:text-5xl font-black text-gray-800 mb-4">
-            {t('home_games_title')}
-          </h2>
-          <p className="text-xl text-gray-600">{t('games_page_subtitle')}</p>
-        </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {games.map((game, index) => (
@@ -61,7 +73,7 @@ export function GamesSection({ games }: GamesSectionProps) {
               className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 animate-slide-up cursor-pointer"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="relative aspect-video bg-gradient-to-br from-blue-200 to-cyan-200 overflow-hidden">
+              <div className="relative aspect-video bg-gradient-to-br from-[rgba(63,169,245,0.2)] to-[rgba(34,181,115,0.2)] overflow-hidden">
                 {game.thumbnail_url ? (
                   <img
                     src={game.thumbnail_url}
@@ -80,7 +92,7 @@ export function GamesSection({ games }: GamesSectionProps) {
 
               <div className="p-6">
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-2xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors flex-1">
+                  <h3 className="text-xl font-bold text-gray-800 group-hover:text-[var(--brand-blue)] transition-colors flex-1">
                     {getLocalizedText(game, 'name')}
                   </h3>
                   <span className="text-2xl ml-2">{getGameTypeIcon(game.game_type)}</span>
@@ -95,15 +107,15 @@ export function GamesSection({ games }: GamesSectionProps) {
                     {game.difficulty === 'easy'
                       ? language === 'fr' ? 'Facile' : language === 'en' ? 'Easy' : 'Fácil'
                       : game.difficulty === 'medium'
-                      ? language === 'fr' ? 'Moyen' : language === 'en' ? 'Medium' : 'Medio'
-                      : language === 'fr' ? 'Difficile' : language === 'en' ? 'Hard' : 'Difícil'}
+                        ? language === 'fr' ? 'Moyen' : language === 'en' ? 'Medium' : 'Medio'
+                        : language === 'fr' ? 'Difficile' : language === 'en' ? 'Hard' : 'Difícil'}
                   </span>
-                  <span className="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-sm font-medium">
+                  <span className="px-3 py-1 bg-[rgba(63,169,245,0.2)] text-[var(--brand-blue)] rounded-full text-sm font-medium">
                     {game.age_min}-{game.age_max} {language === 'fr' ? 'ans' : language === 'en' ? 'yo' : 'años'}
                   </span>
                 </div>
 
-                <button className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-full font-bold text-lg transition-all group-hover:scale-105">
+                <button className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-teal)] text-white rounded-full font-bold text-lg transition-all group-hover:scale-105">
                   <Gamepad2 className="w-5 h-5" />
                   <span>{t('play_now')}</span>
                 </button>
@@ -120,6 +132,15 @@ export function GamesSection({ games }: GamesSectionProps) {
             </div>
           ))}
         </div>
+
+        {showViewMore && (
+          <div className="text-center mt-8">
+            <Link to={viewMoreTo} className="inline-flex items-center gap-2 px-8 py-4 btn-primary text-lg">
+              <span>{t('view_more')}</span>
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );
