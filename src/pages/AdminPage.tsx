@@ -479,6 +479,18 @@ export function AdminPage() {
                                         <label htmlFor="is_featured" className="text-sm font-medium text-gray-700">Display on Homepage</label>
                                     </div>
                                 )}
+
+                                {/* Article Thumbnail Image */}
+                                {activeTab === 'articles' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Article Thumbnail</label>
+                                        <ImageUploader
+                                            currentImageUrl={editingItem.thumbnail_url}
+                                            onImageUploaded={(url) => setEditingItem({ ...editingItem, thumbnail_url: url })}
+                                            articleSlug={editingItem.slug_fr || editingItem.slug_en || editingItem.slug_es}
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             {/* Descriptions */}
@@ -538,14 +550,6 @@ export function AdminPage() {
                                                 </div>
                                             ))}
                                         </div>
-                                    </div>
-
-                                    <div className="md:col-span-2">
-                                        <ImageUploader
-                                            currentImageUrl={editingItem.thumbnail_url}
-                                            onImageUploaded={(url) => setEditingItem({ ...editingItem, thumbnail_url: url })}
-                                            articleSlug={editingItem.slug_fr || editingItem.slug_en || editingItem.slug_es}
-                                        />
                                     </div>
                                 </>
                             )}
