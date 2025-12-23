@@ -13,6 +13,7 @@ import { LearningSection } from './LearningSection';
 import { ResourcesSection } from './ResourcesSection';
 import { FaqSection } from './FaqSection';
 import { ContactSection } from './ContactSection';
+import { AnimatedLogo } from './AnimatedLogo';
 
 export function HomePage() {
   const { language, t } = useLanguage();
@@ -111,11 +112,7 @@ export function HomePage() {
         <div className="container mx-auto relative z-10">
           <div className="text-center mb-12 animate-fade-in">
             <div className="flex justify-center mb-8">
-              <img
-                src="/logo_boomlalaboom.png"
-                alt="BoomLaLaBoom"
-                className="h-32 md:h-40 w-auto animate-bounce-gentle"
-              />
+              <AnimatedLogo size={300} />
             </div>
             <h1 className="text-4xl md:text-6xl font-black mb-6 text-[#FFE600] leading-tight">
               {t('home_hero_title')}
