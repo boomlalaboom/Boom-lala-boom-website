@@ -46,7 +46,7 @@ export function AnimatedLogo({ size = 300 }: AnimatedLogoProps) {
   const rightEyePos = { x: 59.4, y: 30.8 };
 
   // Taille pupille proportionnelle au logo (agrandie)
-  const pupilSize = size * 0.10; // 10% de la taille du logo (au lieu de 6.6%)
+  const pupilSize = size * 0.13; // 13% de la taille du logo
 
   return (
     <div
