@@ -61,48 +61,48 @@ export function AnimatedLogo({ size = 300 }: AnimatedLogoProps) {
         className="w-full h-full object-contain"
       />
 
-      {/* Pupille gauche */}
+      {/* Pupille gauche (bleue fixe) */}
       <div
-        className="absolute rounded-full bg-[#1a1a4d] transition-transform duration-100 ease-out shadow-lg"
+        className="absolute rounded-full bg-[#1a1a4d] shadow-lg"
         style={{
           width: pupilSize,
           height: pupilSize,
           left: `calc(${leftEyePos.x}% - ${pupilSize / 2}px)`,
           top: `calc(${leftEyePos.y}% - ${pupilSize / 2}px)`,
-          transform: `translate(${leftPupil.x}px, ${leftPupil.y}px)`,
         }}
       >
-        {/* Reflet blanc dans la pupille */}
+        {/* Reflet blanc qui bouge */}
         <div
-          className="absolute bg-white rounded-full"
+          className="absolute bg-white rounded-full transition-transform duration-100 ease-out"
           style={{
             width: pupilSize * 0.35,
             height: pupilSize * 0.35,
             top: '20%',
             left: '25%',
+            transform: `translate(${leftPupil.x}px, ${leftPupil.y}px)`,
           }}
         />
       </div>
 
-      {/* Pupille droite */}
+      {/* Pupille droite (bleue fixe) */}
       <div
-        className="absolute rounded-full bg-[#1a1a4d] transition-transform duration-100 ease-out shadow-lg"
+        className="absolute rounded-full bg-[#1a1a4d] shadow-lg"
         style={{
           width: pupilSize,
           height: pupilSize,
           left: `calc(${rightEyePos.x}% - ${pupilSize / 2}px)`,
           top: `calc(${rightEyePos.y}% - ${pupilSize / 2}px)`,
-          transform: `translate(${rightPupil.x}px, ${rightPupil.y}px)`,
         }}
       >
-        {/* Reflet blanc dans la pupille */}
+        {/* Reflet blanc qui bouge */}
         <div
-          className="absolute bg-white rounded-full"
+          className="absolute bg-white rounded-full transition-transform duration-100 ease-out"
           style={{
             width: pupilSize * 0.35,
             height: pupilSize * 0.35,
             top: '20%',
             left: '25%',
+            transform: `translate(${rightPupil.x}px, ${rightPupil.y}px)`,
           }}
         />
       </div>
