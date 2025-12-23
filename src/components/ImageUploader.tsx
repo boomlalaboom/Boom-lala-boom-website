@@ -6,9 +6,11 @@ interface ImageUploaderProps {
   currentImageUrl?: string;
   onImageUploaded: (url: string) => void;
   articleSlug?: string;
+  bucket?: 'article-images' | 'game-images';
+  label?: string;
 }
 
-export function ImageUploader({ currentImageUrl, onImageUploaded, articleSlug }: ImageUploaderProps) {
+export function ImageUploader({ currentImageUrl, onImageUploaded, articleSlug, bucket = 'article-images', label }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImageUrl || null);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +32,7 @@ export function ImageUploader({ currentImageUrl, onImageUploaded, articleSlug }:
     }
 
     if (!articleSlug) {
-      setError('Veuillez d\'abord sauvegarder l\'article pour obtenir un slug.');
+      setError('Veuillez d\'abord sauvegarder pour obtenir un slug.');
       return;
     }
 
@@ -48,7 +50,7 @@ export function ImageUploader({ currentImageUrl, onImageUploaded, articleSlug }:
       // Supprimer l'ancienne image si elle existe
       if (currentImageUrl) {
         try {
-          await deleteImageFromSupabase(currentImageUrl);
+          await deleteImageFromSupabase(currentImageUrl, bucket);
         } catch (err) {
           console.warn('Could not delete old image:', err);
         }
@@ -59,7 +61,7 @@ export function ImageUploader({ currentImageUrl, onImageUploaded, articleSlug }:
         maxWidth: 1200,
         maxHeight: 800,
         quality: 0.85,
-      });
+      }, bucket);
 
       onImageUploaded(publicUrl);
     } catch (err) {
@@ -105,7 +107,7 @@ export function ImageUploader({ currentImageUrl, onImageUploaded, articleSlug }:
     if (!currentImageUrl) return;
 
     try {
-      await deleteImageFromSupabase(currentImageUrl);
+      await deleteImageFromSupabase(currentImageUrl, bucket);
       setPreview(null);
       onImageUploaded('');
     } catch (err) {
@@ -121,7 +123,7 @@ export function ImageUploader({ currentImageUrl, onImageUploaded, articleSlug }:
   return (
     <div className="space-y-4">
       <label className="block text-sm font-medium text-gray-700">
-        Image de l'article (JPEG/PNG → WebP)
+        {label || 'Image (JPEG/PNG → WebP)'}
       </label>
 
       <div className="relative">
@@ -182,7 +184,7 @@ export function ImageUploader({ currentImageUrl, onImageUploaded, articleSlug }:
                   </p>
                   {!articleSlug && (
                     <p className="text-xs text-red-500 mt-2">
-                      ⚠️ Sauvegardez d'abord l'article
+                      ⚠️ Sauvegardez d'abord
                     </p>
                   )}
                 </div>

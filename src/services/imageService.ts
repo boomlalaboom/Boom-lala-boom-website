@@ -142,7 +142,8 @@ export async function uploadImageToSupabase(
 export async function processAndUploadImage(
   file: File,
   articleSlug: string,
-  options?: ImageProcessingOptions
+  options?: ImageProcessingOptions,
+  bucket: string = 'article-images'
 ): Promise<string> {
   try {
     // 1. Convertir en WebP et compresser
@@ -152,7 +153,7 @@ export async function processAndUploadImage(
     const fileName = generateImageFileName(articleSlug);
 
     // 3. Upload vers Supabase
-    const publicUrl = await uploadImageToSupabase(webpBlob, fileName);
+    const publicUrl = await uploadImageToSupabase(webpBlob, fileName, bucket);
 
     return publicUrl;
   } catch (error) {

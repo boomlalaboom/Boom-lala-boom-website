@@ -488,6 +488,22 @@ export function AdminPage() {
                                             currentImageUrl={editingItem.thumbnail_url}
                                             onImageUploaded={(url) => setEditingItem({ ...editingItem, thumbnail_url: url })}
                                             articleSlug={editingItem.slug_fr || editingItem.slug_en || editingItem.slug_es}
+                                            bucket="article-images"
+                                            label="Image de l'article (JPEG/PNG → WebP)"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Game Thumbnail Image */}
+                                {activeTab === 'games' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Game Thumbnail</label>
+                                        <ImageUploader
+                                            currentImageUrl={editingItem.thumbnail_url}
+                                            onImageUploaded={(url) => setEditingItem({ ...editingItem, thumbnail_url: url })}
+                                            articleSlug={editingItem.slug}
+                                            bucket="game-images"
+                                            label="Image du jeu (JPEG/PNG → WebP)"
                                         />
                                     </div>
                                 )}
