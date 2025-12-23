@@ -1,10 +1,25 @@
 /**
- * Service de génération d'articles via IA (OpenRouter + ChatGPT 4o-mini)
+ * Service de génération d'articles via IA (OpenRouter ou OpenAI direct)
+ * Génère chaque langue séparément pour éviter les limites de tokens
  */
 
-const OPENROUTER_API_KEY = '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';
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'openai/gpt-4o-mini'; // Free tier
+// Récupère la configuration depuis localStorage (configuré dans l'admin)
+function getAPIKey(): string {
+  const localKey = localStorage.getItem('ai_api_key');
+  if (localKey && localKey.trim()) return localKey;
+  return import.meta.env.VITE_OPENROUTER_API_KEY || '';
+}
+
+function getModel(): string {
+  const localModel = localStorage.getItem('ai_model');
+  if (localModel && localModel.trim()) return localModel;
+  return 'gpt-4o-mini';
+}
+
+// Détecte si on utilise OpenAI directement ou OpenRouter
+function isDirectOpenAI(apiKey: string): boolean {
+  return apiKey.startsWith('sk-proj-') || apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-');
+}
 
 interface GeneratedArticle {
   title_fr: string;
@@ -19,7 +34,21 @@ interface GeneratedArticle {
   content_fr: string;
   content_en: string;
   content_es: string;
+  meta_title_fr: string;
+  meta_title_en: string;
+  meta_title_es: string;
+  meta_description_fr: string;
+  meta_description_en: string;
+  meta_description_es: string;
   read_time_minutes: number;
+}
+
+interface LanguageArticle {
+  title: string;
+  excerpt: string;
+  content: string;
+  meta_title: string;
+  meta_description: string;
 }
 
 /**
@@ -29,91 +58,99 @@ function generateSlug(title: string): string {
   return title
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Supprimer les accents
-    .replace(/[^a-z0-9\s-]/g, '') // Garder uniquement lettres, chiffres, espaces et tirets
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
     .trim()
-    .replace(/\s+/g, '-') // Remplacer espaces par tirets
-    .replace(/-+/g, '-'); // Supprimer tirets multiples
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
 }
 
 /**
  * Calcule le temps de lecture estimé en minutes
  */
 function calculateReadTime(html: string): number {
-  // Retirer les balises HTML
   const text = html.replace(/<[^>]*>/g, '');
-  // Compter les mots (moyenne 200 mots/min)
   const wordCount = text.split(/\s+/).length;
   const minutes = Math.ceil(wordCount / 200);
-  return Math.max(1, minutes); // Minimum 1 minute
+  return Math.max(1, minutes);
 }
 
 /**
- * Génère un article complet en 3 langues via IA
+ * Génère un article dans une langue spécifique
  */
-export async function generateArticleWithAI(
+async function generateArticleForLanguage(
   titleInput: string,
-  targetAudience: string = 'parents et enfants de 2 à 8 ans'
-): Promise<GeneratedArticle> {
-  const prompt = `Tu es un rédacteur expert pour BoomLaLaBoom, un site éducatif pour enfants.
+  language: 'fr' | 'en' | 'es',
+  API_KEY: string,
+  MODEL: string,
+  useDirectOpenAI: boolean
+): Promise<LanguageArticle> {
+  const languageNames = {
+    fr: 'français',
+    en: 'English',
+    es: 'español'
+  };
 
-Génère un article de blog complet et détaillé sur le sujet suivant : "${titleInput}"
+  const prompt = `Génère un article de blog complet en ${languageNames[language]} sur le sujet: "${titleInput}"
 
-Public cible : ${targetAudience}
+Public cible: Parents d'enfants de 2 à 8 ans
 
-L'article doit être :
-- Informatif, engageant et optimisé SEO
-- Structuré avec des titres H2, H3, des paragraphes, des listes
-- Entre 800 et 1200 mots
-- Adapté à des parents cherchant du contenu éducatif de qualité
-
-IMPORTANT : Réponds UNIQUEMENT avec un objet JSON valide contenant ces champs (pas de markdown, pas de texte avant/après) :
-
+Réponds UNIQUEMENT avec ce JSON (pas de markdown, pas de texte avant/après):
 {
-  "title_fr": "Titre en français (60 caractères max)",
-  "title_en": "Title in English (60 characters max)",
-  "title_es": "Título en español (60 caracteres max)",
-  "excerpt_fr": "Résumé captivant en français (150-160 caractères)",
-  "excerpt_en": "Captivating summary in English (150-160 characters)",
-  "excerpt_es": "Resumen cautivador en español (150-160 caracteres)",
-  "content_fr": "Contenu complet en HTML (avec <h2>, <h3>, <p>, <ul>, <li>, etc.)",
-  "content_en": "Full content in HTML (with <h2>, <h3>, <p>, <ul>, <li>, etc.)",
-  "content_es": "Contenido completo en HTML (con <h2>, <h3>, <p>, <ul>, <li>, etc.)"
+  "title": "Titre accrocheur (55-60 caractères)",
+  "excerpt": "Résumé captivant (150-160 caractères)",
+  "meta_title": "Meta titre SEO (55-60 caractères)",
+  "meta_description": "Meta description SEO (150-160 caractères)",
+  "content": "Contenu HTML complet 800-1000 mots avec <h2>, <h3>, <p>, <ul>, <li>"
 }
 
-Le contenu HTML doit :
-- Commencer directement par le contenu (pas de <h1>, il est déjà dans le titre)
-- Utiliser <h2> pour les sections principales
-- Utiliser <h3> pour les sous-sections
-- Inclure des <p> pour les paragraphes
-- Utiliser <ul> et <li> pour les listes
-- Être bien formaté et structuré`;
+Le contenu HTML doit:
+- Commencer par une introduction
+- 3-4 sections avec <h2>
+- Sous-sections avec <h3> si nécessaire
+- Listes <ul><li> pour les points clés
+- Conclusion engageante
+- Pas de <h1> (déjà dans le titre)
+- Optimisé SEO avec mots-clés naturels`;
+
+  const API_URL = useDirectOpenAI
+    ? 'https://api.openai.com/v1/chat/completions'
+    : 'https://openrouter.ai/api/v1/chat/completions';
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${API_KEY}`,
+  };
+
+  if (!useDirectOpenAI) {
+    headers['HTTP-Referer'] = window.location.origin;
+    headers['X-Title'] = 'BoomLaLaBoom Admin';
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 secondes
 
   try {
-    const response = await fetch(OPENROUTER_API_URL, {
+    const response = await fetch(API_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'BoomLaLaBoom Admin',
-      },
+      headers,
+      signal: controller.signal,
       body: JSON.stringify({
         model: MODEL,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
+        messages: [{
+          role: 'user',
+          content: prompt,
+        }],
         temperature: 0.7,
-        max_tokens: 4000,
+        max_tokens: 2000,
       }),
     });
 
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(`OpenRouter API error: ${response.status} - ${JSON.stringify(errorData)}`);
+      throw new Error(`API error: ${response.status} - ${JSON.stringify(errorData)}`);
     }
 
     const data = await response.json();
@@ -123,44 +160,98 @@ Le contenu HTML doit :
       throw new Error('No content generated from AI');
     }
 
-    // Parser le JSON retourné par l'IA
-    let parsedContent;
-    try {
-      // Nettoyer le contenu pour extraire uniquement le JSON
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON found in AI response');
-      }
-      parsedContent = JSON.parse(jsonMatch[0]);
-    } catch (parseError) {
-      console.error('Failed to parse AI response:', content);
-      throw new Error('Invalid JSON response from AI');
+    // Parser le JSON
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No JSON found in AI response');
     }
 
-    // Générer les slugs
-    const slug_fr = generateSlug(parsedContent.title_fr);
-    const slug_en = generateSlug(parsedContent.title_en);
-    const slug_es = generateSlug(parsedContent.title_es);
+    const parsed = JSON.parse(jsonMatch[0]);
+    return parsed;
 
-    // Calculer le temps de lecture (moyenne des 3 langues)
-    const readTimeFr = calculateReadTime(parsedContent.content_fr);
-    const readTimeEn = calculateReadTime(parsedContent.content_en);
-    const readTimeEs = calculateReadTime(parsedContent.content_es);
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+}
+
+/**
+ * Génère un article complet en 3 langues via IA
+ */
+export async function generateArticleWithAI(
+  titleInput: string,
+  targetAudience: string = 'parents et enfants de 2 à 8 ans',
+  onProgress?: (message: string) => void
+): Promise<GeneratedArticle> {
+  // Récupérer la configuration
+  const API_KEY = getAPIKey();
+  let MODEL = getModel();
+
+  if (!API_KEY || API_KEY === 'your-openrouter-api-key-here') {
+    throw new Error('La clé API n\'est pas configurée. Veuillez aller dans l\'onglet "AI Settings".');
+  }
+
+  const useDirectOpenAI = isDirectOpenAI(API_KEY);
+
+  // Ajuster le nom du modèle
+  if (useDirectOpenAI && MODEL.startsWith('openai/')) {
+    MODEL = MODEL.replace('openai/', '');
+  }
+
+  if (!useDirectOpenAI && !MODEL.includes('/') && !MODEL.includes(':free')) {
+    MODEL = `openai/${MODEL}`;
+  }
+
+  try {
+    // Générer français
+    onProgress?.('Génération en français...');
+    const frArticle = await generateArticleForLanguage(titleInput, 'fr', API_KEY, MODEL, useDirectOpenAI);
+
+    // Petit délai pour éviter le rate limiting
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Générer anglais
+    onProgress?.('Génération en anglais...');
+    const enArticle = await generateArticleForLanguage(titleInput, 'en', API_KEY, MODEL, useDirectOpenAI);
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Générer espagnol
+    onProgress?.('Génération en espagnol...');
+    const esArticle = await generateArticleForLanguage(titleInput, 'es', API_KEY, MODEL, useDirectOpenAI);
+
+    onProgress?.('Finalisation...');
+
+    // Générer les slugs
+    const slug_fr = generateSlug(frArticle.title);
+    const slug_en = generateSlug(enArticle.title);
+    const slug_es = generateSlug(esArticle.title);
+
+    // Calculer le temps de lecture
+    const readTimeFr = calculateReadTime(frArticle.content);
+    const readTimeEn = calculateReadTime(enArticle.content);
+    const readTimeEs = calculateReadTime(esArticle.content);
     const read_time_minutes = Math.round((readTimeFr + readTimeEn + readTimeEs) / 3);
 
     return {
-      title_fr: parsedContent.title_fr,
-      title_en: parsedContent.title_en,
-      title_es: parsedContent.title_es,
+      title_fr: frArticle.title,
+      title_en: enArticle.title,
+      title_es: esArticle.title,
       slug_fr,
       slug_en,
       slug_es,
-      excerpt_fr: parsedContent.excerpt_fr,
-      excerpt_en: parsedContent.excerpt_en,
-      excerpt_es: parsedContent.excerpt_es,
-      content_fr: parsedContent.content_fr,
-      content_en: parsedContent.content_en,
-      content_es: parsedContent.content_es,
+      excerpt_fr: frArticle.excerpt,
+      excerpt_en: enArticle.excerpt,
+      excerpt_es: esArticle.excerpt,
+      content_fr: frArticle.content,
+      content_en: enArticle.content,
+      content_es: esArticle.content,
+      meta_title_fr: frArticle.meta_title,
+      meta_title_en: enArticle.meta_title,
+      meta_title_es: esArticle.meta_title,
+      meta_description_fr: frArticle.meta_description,
+      meta_description_en: enArticle.meta_description,
+      meta_description_es: esArticle.meta_description,
       read_time_minutes,
     };
   } catch (error) {

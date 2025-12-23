@@ -5,12 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import {
     Plus, Edit2, Trash2, Save, X,
     Music, Gamepad2, Users, Scissors, BookOpen,
-    LogOut, Loader2, AlertCircle, Sparkles
+    LogOut, Loader2, AlertCircle, Sparkles, Settings
 } from 'lucide-react';
 import { ImageUploader } from '../components/ImageUploader';
 import { generateArticleWithAI } from '../services/aiService';
 
-type Tab = 'characters' | 'songs' | 'games' | 'activities' | 'articles';
+type Tab = 'characters' | 'songs' | 'games' | 'activities' | 'articles' | 'settings';
 
 export function AdminPage() {
     const { user, isAdmin, loading: authLoading, signOut } = useAuth();
@@ -22,6 +22,12 @@ export function AdminPage() {
     const [isEditing, setIsEditing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [generatingAI, setGeneratingAI] = useState(false);
+    const [aiProgress, setAiProgress] = useState('');
+
+    // AI Settings
+    const [aiApiKey, setAiApiKey] = useState(localStorage.getItem('ai_api_key') || '');
+    const [aiModel, setAiModel] = useState(localStorage.getItem('ai_model') || 'openai/gpt-4o-mini');
+    const [settingsSaved, setSettingsSaved] = useState(false);
 
     useEffect(() => {
         if (!authLoading && (!user || !isAdmin)) {
@@ -30,7 +36,7 @@ export function AdminPage() {
     }, [user, isAdmin, authLoading, navigate]);
 
     useEffect(() => {
-        if (user && isAdmin) {
+        if (user && isAdmin && activeTab !== 'settings') {
             fetchItems();
         }
     }, [activeTab, user, isAdmin]);
@@ -51,6 +57,13 @@ export function AdminPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const saveAISettings = () => {
+        localStorage.setItem('ai_api_key', aiApiKey);
+        localStorage.setItem('ai_model', aiModel);
+        setSettingsSaved(true);
+        setTimeout(() => setSettingsSaved(false), 3000);
     };
 
     const handleSave = async (e: React.FormEvent) => {
@@ -147,6 +160,8 @@ export function AdminPage() {
             emptyItem.title_fr = ''; emptyItem.title_en = ''; emptyItem.title_es = '';
             emptyItem.excerpt_fr = ''; emptyItem.excerpt_en = ''; emptyItem.excerpt_es = '';
             emptyItem.content_fr = ''; emptyItem.content_en = ''; emptyItem.content_es = '';
+            emptyItem.meta_title_fr = ''; emptyItem.meta_title_en = ''; emptyItem.meta_title_es = '';
+            emptyItem.meta_description_fr = ''; emptyItem.meta_description_en = ''; emptyItem.meta_description_es = '';
             emptyItem.author_name = 'BoomLaLaBoom Team';
             emptyItem.read_time_minutes = 5;
             emptyItem.is_featured = false;
@@ -170,9 +185,12 @@ export function AdminPage() {
 
         setGeneratingAI(true);
         setError(null);
+        setAiProgress('Démarrage de la génération...');
 
         try {
-            const generated = await generateArticleWithAI(titleInput);
+            const generated = await generateArticleWithAI(titleInput, 'parents et enfants de 2 à 8 ans', (message) => {
+                setAiProgress(message);
+            });
 
             setEditingItem({
                 ...editingItem,
@@ -188,12 +206,23 @@ export function AdminPage() {
                 content_fr: generated.content_fr,
                 content_en: generated.content_en,
                 content_es: generated.content_es,
+                meta_title_fr: generated.meta_title_fr,
+                meta_title_en: generated.meta_title_en,
+                meta_title_es: generated.meta_title_es,
+                meta_description_fr: generated.meta_description_fr,
+                meta_description_en: generated.meta_description_en,
+                meta_description_es: generated.meta_description_es,
                 read_time_minutes: generated.read_time_minutes,
             });
+            setAiProgress('✅ Génération terminée !');
         } catch (err: any) {
             setError(`Erreur IA: ${err.message}`);
+            setAiProgress('');
         } finally {
-            setGeneratingAI(false);
+            setTimeout(() => {
+                setGeneratingAI(false);
+                setAiProgress('');
+            }, 2000);
         }
     };
 
@@ -234,6 +263,7 @@ export function AdminPage() {
                     { id: 'games', icon: Gamepad2, label: 'Games' },
                     { id: 'activities', icon: Scissors, label: 'Activities' },
                     { id: 'articles', icon: BookOpen, label: 'Blog Articles' },
+                    { id: 'settings', icon: Settings, label: 'AI Settings' },
                 ].map((tab) => {
                     const Icon = tab.icon;
                     return (
@@ -255,14 +285,14 @@ export function AdminPage() {
                 })}
             </div>
 
-            {error && (
+            {error && activeTab !== 'settings' && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-center space-x-3 text-red-600">
                     <AlertCircle className="w-5 h-5 flex-shrink-0" />
                     <p className="text-sm font-medium">{error}</p>
                 </div>
             )}
 
-            {isEditing ? (
+            {activeTab !== 'settings' && isEditing ? (
                 <div className="bg-white rounded-3xl shadow-xl overflow-hidden p-8">
                     <div className="flex items-center justify-between mb-8">
                         <h2 className="text-xl font-bold text-gray-800">
@@ -303,6 +333,30 @@ export function AdminPage() {
                             <p className="text-sm text-purple-700">
                                 💡 <strong>Astuce:</strong> Entrez un titre dans n'importe quelle langue, puis cliquez sur "Générer avec IA" pour créer automatiquement un article complet en 3 langues avec l'IA.
                             </p>
+                        </div>
+                    )}
+
+                    {activeTab === 'articles' && generatingAI && aiProgress && (
+                        <div className="mb-6 p-6 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300 rounded-2xl shadow-lg">
+                            <div className="flex items-center gap-4">
+                                <div className="relative">
+                                    <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+                                    <div className="absolute inset-0 w-8 h-8 animate-ping bg-purple-400 rounded-full opacity-20"></div>
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-bold text-purple-900 mb-1">Génération en cours...</h3>
+                                    <p className="text-sm text-purple-700 font-medium">{aiProgress}</p>
+                                    <div className="mt-3 w-full bg-purple-200 rounded-full h-2 overflow-hidden">
+                                        <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse" style={{
+                                            width: aiProgress.includes('français') ? '33%' :
+                                                   aiProgress.includes('anglais') ? '66%' :
+                                                   aiProgress.includes('espagnol') ? '90%' :
+                                                   aiProgress.includes('✅') ? '100%' : '10%',
+                                            transition: 'width 0.5s ease-in-out'
+                                        }}></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
 
@@ -591,7 +645,7 @@ export function AdminPage() {
                         </div>
                     </form>
                 </div>
-            ) : (
+            ) : activeTab !== 'settings' && (
                 <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
                     <div className="p-6 border-b flex items-center justify-between bg-gray-50/50">
                         <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 capitalize">
@@ -698,6 +752,95 @@ export function AdminPage() {
                                 )}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            )}
+
+            {/* AI Settings Tab */}
+            {activeTab === 'settings' && (
+                <div className="bg-white rounded-3xl shadow-xl p-8">
+                    <h2 className="text-2xl font-black text-gray-800 mb-6">Configuration IA pour la génération d'articles</h2>
+                    <p className="text-gray-600 mb-8">
+                        Configurez votre clé API OpenRouter et choisissez le modèle IA pour générer vos articles de blog.
+                    </p>
+
+                    <div className="space-y-6">
+                        {/* API Key Input */}
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">
+                                Clé API (OpenRouter ou OpenAI)
+                            </label>
+                            <input
+                                type="password"
+                                value={aiApiKey}
+                                onChange={(e) => setAiApiKey(e.target.value)}
+                                placeholder="sk-or-v1-... ou sk-proj-..."
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[var(--brand-pink)] focus:ring-2 focus:ring-[var(--brand-pink)]/20 outline-none transition-all font-mono text-sm"
+                            />
+                            <p className="text-xs text-gray-500 mt-2">
+                                <strong>OpenRouter</strong> (gratuit) : <a href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Créer une clé</a> |
+                                <strong> OpenAI</strong> (payant) : <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">Créer une clé</a>
+                            </p>
+                        </div>
+
+                        {/* Model Selection */}
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">
+                                Modèle IA
+                            </label>
+                            <select
+                                value={aiModel}
+                                onChange={(e) => setAiModel(e.target.value)}
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[var(--brand-pink)] focus:ring-2 focus:ring-[var(--brand-pink)]/20 outline-none transition-all"
+                            >
+                                <optgroup label="💰 OpenAI Direct (Payant - Meilleure qualité)">
+                                    <option value="gpt-4o-mini">GPT-4o Mini (~$0.15/1M tokens)</option>
+                                    <option value="gpt-4o">GPT-4o (~$2.50/1M tokens)</option>
+                                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (~$0.50/1M tokens)</option>
+                                </optgroup>
+                                <optgroup label="🆓 OpenRouter Gratuit (Requiert paramètres privacy)">
+                                    <option value="xiaomi/mimo-v2-flash:free">Xiaomi MiMo V2 Flash (Gratuit, Performant)</option>
+                                    <option value="meta-llama/llama-3.2-3b-instruct:free">Meta Llama 3.2 3B (Gratuit)</option>
+                                    <option value="mistralai/devstral-2512:free">Mistral Devstral 2512 (Gratuit)</option>
+                                    <option value="allenai/olmo-3.1-32b-think:free">AllenAI Olmo 3.1 32B (Gratuit)</option>
+                                </optgroup>
+                                <optgroup label="💰 OpenRouter Payant">
+                                    <option value="openai/gpt-4o-mini">OpenAI GPT-4o Mini via OpenRouter</option>
+                                    <option value="openai/gpt-3.5-turbo">OpenAI GPT-3.5 Turbo via OpenRouter</option>
+                                    <option value="anthropic/claude-3-haiku">Anthropic Claude 3 Haiku</option>
+                                </optgroup>
+                            </select>
+                            <p className="text-xs text-gray-500 mt-2">
+                                <strong>OpenAI direct</strong> : Utilisez votre clé OpenAI (sk-proj-...) |
+                                <strong> OpenRouter</strong> : Utilisez votre clé OpenRouter (sk-or-v1-...)
+                            </p>
+                        </div>
+
+                        {/* Save Button */}
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={saveAISettings}
+                                className="px-6 py-3 bg-gradient-to-r from-[var(--brand-pink)] to-[var(--brand-orange)] text-white font-bold rounded-xl hover:shadow-lg transform hover:scale-105 transition-all"
+                            >
+                                💾 Sauvegarder la configuration
+                            </button>
+                            {settingsSaved && (
+                                <span className="text-green-600 font-semibold animate-pulse">
+                                    ✓ Configuration sauvegardée !
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Info Box */}
+                        <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mt-6">
+                            <h3 className="font-bold text-blue-900 mb-2">📝 Comment ça marche ?</h3>
+                            <ul className="text-sm text-blue-800 space-y-2">
+                                <li>• Configurez votre clé API OpenRouter et choisissez un modèle</li>
+                                <li>• Allez dans l'onglet "Blog Articles" et créez un nouvel article</li>
+                                <li>• Cliquez sur "✨ Générer avec IA" pour générer automatiquement le contenu</li>
+                                <li>• L'IA créera le titre, résumé et contenu en 3 langues (FR/EN/ES)</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             )}

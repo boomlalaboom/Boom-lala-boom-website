@@ -19,6 +19,7 @@ import { BlogPage } from './pages/BlogPage';
 import { ArticlePage } from './pages/ArticlePage';
 import { AuthProvider } from './contexts/AuthContext';
 import { LolaMemoryPage } from './pages/LolaMemoryPage';
+import { SharkRhythmGamePage } from './pages/SharkRhythmGamePage';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
               <Route path="/songs" element={<SongsPage />} />
               <Route path="/games" element={<GamesPage />} />
               <Route path="/games/lola-memory" element={<LolaMemoryPage />} />
+              <Route path="/games/shark-rhythm" element={<SharkRhythmGamePage />} />
               <Route path="/characters" element={<CharactersPage />} />
               <Route path="/activities" element={<ActivitiesPage />} />
               <Route path="/learning" element={<LearningPage />} />
