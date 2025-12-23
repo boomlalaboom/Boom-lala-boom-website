@@ -23,12 +23,13 @@ export function AnimatedLogo({ size = 300 }: AnimatedLogoProps) {
 
       // Calculer l'angle et la distance
       const angle = Math.atan2(mouseY, mouseX);
-      const distance = Math.min(Math.sqrt(mouseX ** 2 + mouseY ** 2), size * 0.08); // Max 8% du logo
+      const distance = Math.sqrt(mouseX ** 2 + mouseY ** 2);
 
-      // Position des pupilles (limitée)
-      const maxMove = size * 0.05; // Max 5% du logo
-      const moveX = Math.cos(angle) * Math.min(distance, maxMove);
-      const moveY = Math.sin(angle) * Math.min(distance, maxMove);
+      // Position des pupilles (limitée à 15px max de mouvement)
+      const maxMove = 15;
+      const moveRatio = Math.min(distance / 500, 1); // Plus on est loin, plus ça bouge
+      const moveX = Math.cos(angle) * maxMove * moveRatio;
+      const moveY = Math.sin(angle) * maxMove * moveRatio;
 
       setLeftPupil({ x: moveX, y: moveY });
       setRightPupil({ x: moveX, y: moveY });
@@ -38,11 +39,14 @@ export function AnimatedLogo({ size = 300 }: AnimatedLogoProps) {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [size]);
 
-  // Positions des yeux en pourcentage du logo
-  const leftEyePos = { x: 35, y: 28 }; // Œil gauche
-  const rightEyePos = { x: 57, y: 28 }; // Œil droit
-  const eyeSize = size * 0.17; // Taille de l'œil (17% du logo)
-  const pupilSize = eyeSize * 0.35; // Taille de la pupille (35% de l'œil)
+  // Positions des yeux en pourcentage du logo (basées sur le SVG)
+  // Œil gauche: cx="781.92" cy="623.84" (39.1%, 31.2% de 2000x2000)
+  // Œil droit: cx="1188.22" cy="615.07" (59.4%, 30.8%)
+  const leftEyePos = { x: 39.1, y: 31.2 };
+  const rightEyePos = { x: 59.4, y: 30.8 };
+
+  // Taille pupille proportionnelle au logo
+  const pupilSize = size * 0.066; // ~6.6% de la taille du logo
 
   return (
     <div
@@ -50,21 +54,21 @@ export function AnimatedLogo({ size = 300 }: AnimatedLogoProps) {
       className="relative inline-block"
       style={{ width: size, height: size }}
     >
-      {/* Logo de base */}
+      {/* Logo SVG de base */}
       <img
-        src="/logo_boomlalaboom.png"
+        src="/LOGO_BOOMLALABOOM.svg"
         alt="BoomLaLaBoom"
         className="w-full h-full object-contain"
       />
 
       {/* Pupille gauche */}
       <div
-        className="absolute rounded-full bg-[#1a1a4d] transition-transform duration-100 ease-out"
+        className="absolute rounded-full bg-[#1a1a4d] transition-transform duration-100 ease-out shadow-lg"
         style={{
           width: pupilSize,
           height: pupilSize,
-          left: `${leftEyePos.x}%`,
-          top: `${leftEyePos.y}%`,
+          left: `calc(${leftEyePos.x}% - ${pupilSize / 2}px)`,
+          top: `calc(${leftEyePos.y}% - ${pupilSize / 2}px)`,
           transform: `translate(${leftPupil.x}px, ${leftPupil.y}px)`,
         }}
       >
@@ -72,22 +76,22 @@ export function AnimatedLogo({ size = 300 }: AnimatedLogoProps) {
         <div
           className="absolute bg-white rounded-full"
           style={{
-            width: pupilSize * 0.3,
-            height: pupilSize * 0.3,
-            top: '15%',
-            left: '20%',
+            width: pupilSize * 0.35,
+            height: pupilSize * 0.35,
+            top: '20%',
+            left: '25%',
           }}
         />
       </div>
 
       {/* Pupille droite */}
       <div
-        className="absolute rounded-full bg-[#1a1a4d] transition-transform duration-100 ease-out"
+        className="absolute rounded-full bg-[#1a1a4d] transition-transform duration-100 ease-out shadow-lg"
         style={{
           width: pupilSize,
           height: pupilSize,
-          left: `${rightEyePos.x}%`,
-          top: `${rightEyePos.y}%`,
+          left: `calc(${rightEyePos.x}% - ${pupilSize / 2}px)`,
+          top: `calc(${rightEyePos.y}% - ${pupilSize / 2}px)`,
           transform: `translate(${rightPupil.x}px, ${rightPupil.y}px)`,
         }}
       >
@@ -95,10 +99,10 @@ export function AnimatedLogo({ size = 300 }: AnimatedLogoProps) {
         <div
           className="absolute bg-white rounded-full"
           style={{
-            width: pupilSize * 0.3,
-            height: pupilSize * 0.3,
-            top: '15%',
-            left: '20%',
+            width: pupilSize * 0.35,
+            height: pupilSize * 0.35,
+            top: '20%',
+            left: '25%',
           }}
         />
       </div>

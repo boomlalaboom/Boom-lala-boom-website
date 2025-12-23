@@ -15,7 +15,7 @@ export function LoadingLogo({ size = 80, text = 'Chargement...' }: LoadingLogoPr
         }}
       >
         <img
-          src="/logo_boomlalaboom.png"
+          src="/LOGO_BOOMLALABOOM.svg"
           alt="Loading"
           className="w-full h-full object-contain"
         />
