@@ -46,7 +46,7 @@ export function AnimatedLogo({ size = 300 }: AnimatedLogoProps) {
   const rightEyePos = { x: 59.4, y: 30.8 };
 
   // Taille pupille proportionnelle au logo (agrandie)
-  const pupilSize = size * 0.13; // 13% de la taille du logo
+  const pupilSize = size * 0.135; // 13.5% de la taille du logo (légèrement plus grand)
 
   return (
     <div
@@ -63,7 +63,7 @@ export function AnimatedLogo({ size = 300 }: AnimatedLogoProps) {
 
       {/* Pupille gauche (bleue fixe) */}
       <div
-        className="absolute rounded-full bg-[#1a1a4d] shadow-lg"
+        className="absolute rounded-full bg-[#2a2a5d] shadow-lg"
         style={{
           width: pupilSize,
           height: pupilSize,
@@ -86,7 +86,7 @@ export function AnimatedLogo({ size = 300 }: AnimatedLogoProps) {
 
       {/* Pupille droite (bleue fixe) */}
       <div
-        className="absolute rounded-full bg-[#1a1a4d] shadow-lg"
+        className="absolute rounded-full bg-[#2a2a5d] shadow-lg"
         style={{
           width: pupilSize,
           height: pupilSize,
