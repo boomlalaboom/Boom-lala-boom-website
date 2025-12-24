@@ -1,7 +1,8 @@
-import { Music, Play, ExternalLink, ArrowRight } from 'lucide-react';
+import { Music, Play, ArrowRight, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Song } from '../lib/supabase';
+import { useState } from 'react';
 
 interface SongsSectionProps {
   songs: Song[];
@@ -19,6 +20,7 @@ export function SongsSection({
   variant = 'blue',
 }: SongsSectionProps) {
   const { language, t } = useLanguage();
+  const [activeVideo, setActiveVideo] = useState<string | null>(null);
 
   const getLocalizedField = (obj: Song, field: string) => {
     const key = `${field}_${language}` as keyof Song;
@@ -31,7 +33,7 @@ export function SongsSection({
   };
 
   const openYouTube = (youtubeId: string) => {
-    window.open(`https://www.youtube.com/watch?v=${youtubeId}`, '_blank');
+    setActiveVideo(youtubeId);
   };
 
   return (
@@ -108,7 +110,6 @@ export function SongsSection({
                     className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-[var(--brand-pink)] to-[var(--brand-orange)] text-white rounded-full font-medium transition-all hover:scale-105"
                   >
                     <span>{t('watch_now')}</span>
-                    <ExternalLink className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -165,6 +166,29 @@ export function SongsSection({
           </div>
         )}
       </div>
+
+      {activeVideo && (
+        <div className="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-4" onClick={() => setActiveVideo(null)}>
+          <div className="relative w-full max-w-4xl bg-white rounded-3xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setActiveVideo(null)}
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white shadow-md"
+              aria-label="Close video"
+            >
+              <X className="w-5 h-5 text-gray-700" />
+            </button>
+            <div className="aspect-video bg-black">
+              <iframe
+                title="YouTube video"
+                src={`https://www.youtube.com/embed/${activeVideo}?autoplay=1&rel=0&modestbranding=1`}
+                className="w-full h-full"
+                allow="autoplay; fullscreen"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

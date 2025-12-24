@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import { Music, Gamepad2, Users, Scissors, Info, Globe, Sparkles, BookOpen, Folder, Mail, Heart, FileText } from 'lucide-react';
+import { Music, Gamepad2, Users, Scissors, Info, Globe, Sparkles, BookOpen, Folder, Mail, Heart, FileText, Menu, X as CloseIcon } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import { useLanguage, Language } from '../contexts/LanguageContext';
 
@@ -13,6 +13,7 @@ export function Layout({ children }: LayoutProps) {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showIntro, setShowIntro] = useState(false);
   const [introWithSound, setIntroWithSound] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const introVideoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
@@ -107,7 +108,7 @@ export function Layout({ children }: LayoutProps) {
       )}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-sm shadow-md">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-[auto,1fr,auto] items-center gap-6 h-20">
+          <div className="grid grid-cols-[auto,1fr,auto] items-center gap-3 sm:gap-6 h-20">
             <Link
               to="/"
               className="hover:scale-105 transition-transform sm:-translate-x-[60px]"
@@ -180,64 +181,97 @@ export function Layout({ children }: LayoutProps) {
               </div>
             </nav>
 
-            <div className="relative">
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => setShowLangMenu(!showLangMenu)}
-                className="flex items-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-[rgba(63,169,245,0.2)] to-[rgba(255,123,172,0.2)] hover:from-[rgba(63,169,245,0.3)] hover:to-[rgba(255,123,172,0.3)] transition-all"
+                type="button"
+                onClick={() => setShowMobileMenu(true)}
+                className="md:hidden p-2 rounded-full bg-white shadow-sm border border-[rgba(4,87,186,0.15)]"
+                aria-label="Open menu"
               >
-                <Globe className="w-5 h-5 text-[var(--brand-blue)]" />
-                <span className="font-medium text-[var(--brand-blue)] uppercase">
-                  {language}
-                </span>
+                <Menu className="w-6 h-6 text-[var(--brand-blue)]" />
               </button>
 
-              {showLangMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg overflow-hidden z-50">
-                  {languages.map((lang) => (
-                    <button
-                      key={lang.code}
-                      onClick={() => {
-                        setLanguage(lang.code);
-                        setShowLangMenu(false);
-                      }}
-                      className={`w-full flex items-center space-x-3 px-4 py-3 hover:bg-gradient-to-r hover:from-[rgba(63,169,245,0.12)] hover:to-[rgba(255,123,172,0.12)] transition-colors ${language === lang.code ? 'bg-[rgba(63,169,245,0.12)]' : ''
-                        }`}
-                    >
-                      <span className="text-2xl">{lang.flag}</span>
-                      <span className="font-medium text-gray-700">
-                        {lang.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
+              <div className="relative">
+                <button
+                  onClick={() => setShowLangMenu(!showLangMenu)}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-[rgba(63,169,245,0.2)] to-[rgba(255,123,172,0.2)] hover:from-[rgba(63,169,245,0.3)] hover:to-[rgba(255,123,172,0.3)] transition-all"
+                >
+                  <Globe className="w-5 h-5 text-[var(--brand-blue)]" />
+                  <span className="font-medium text-[var(--brand-blue)] uppercase">
+                    {language}
+                  </span>
+                </button>
+
+                {showLangMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg overflow-hidden z-50">
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          setLanguage(lang.code);
+                          setShowLangMenu(false);
+                        }}
+                        className={`w-full flex items-center space-x-3 px-4 py-3 hover:bg-gradient-to-r hover:from-[rgba(63,169,245,0.12)] hover:to-[rgba(255,123,172,0.12)] transition-colors ${language === lang.code ? 'bg-[rgba(63,169,245,0.12)]' : ''
+                          }`}
+                      >
+                        <span className="text-2xl">{lang.flag}</span>
+                        <span className="font-medium text-gray-700">
+                          {lang.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="md:hidden flex overflow-x-auto pb-3 space-x-2 scrollbar-hide">
-            {[...primaryNavItems, ...secondaryNavItems].map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `flex flex-col items-center space-y-1 px-4 py-2 rounded-2xl bg-white transition-all whitespace-nowrap ${isActive
-                      ? 'bg-gradient-to-br from-[rgba(255,123,172,0.18)] to-[rgba(255,147,30,0.18)]'
-                      : 'hover:bg-gradient-to-br hover:from-[rgba(255,123,172,0.12)] hover:to-[rgba(255,147,30,0.12)]'
-                    }`
-                  }
-                >
-                  <Icon className="w-6 h-6 text-[var(--brand-pink)]" />
-                  <span className="text-xs font-medium text-gray-600">
-                    {item.label}
-                  </span>
-                </NavLink>
-              );
-            })}
-          </div>
         </div>
       </header>
+
+      {showMobileMenu && (
+        <div className="fixed inset-0 z-[55] bg-black/40 md:hidden" onClick={() => setShowMobileMenu(false)}>
+          <div
+            className="absolute top-0 right-0 h-full w-72 bg-white shadow-2xl p-6 flex flex-col gap-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-[var(--brand-blue)]">
+                {language === 'fr' ? 'Menu' : language === 'en' ? 'Menu' : 'Menu'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowMobileMenu(false)}
+                className="p-2 rounded-full bg-gray-100"
+                aria-label="Close menu"
+              >
+                <CloseIcon className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-2">
+              {[...primaryNavItems, ...secondaryNavItems].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setShowMobileMenu(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-4 py-3 rounded-2xl font-medium transition-all ${isActive
+                        ? 'bg-gradient-to-r from-[rgba(255,123,172,0.2)] to-[rgba(255,147,30,0.2)] text-[var(--brand-red)]'
+                        : 'bg-gray-50 text-gray-700'
+                      }`
+                    }
+                  >
+                    <Icon className="w-5 h-5 text-[var(--brand-pink)]" />
+                    {item.label}
+                  </NavLink>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       <main>{children}</main>
 
