@@ -8,7 +8,7 @@ import {
     LogOut, Loader2, AlertCircle, Sparkles, Settings, GripVertical
 } from 'lucide-react';
 import { ImageUploader } from '../components/ImageUploader';
-import { generateArticleWithAI, generateGameWithAI } from '../services/aiService';
+import { generateArticleWithAI, generateGameWithAI, generateCharacterWithAI } from '../services/aiService';
 
 type Tab = 'characters' | 'songs' | 'games' | 'activities' | 'articles' | 'settings';
 
@@ -339,6 +339,48 @@ export function AdminPage() {
         fetchItems();
     };
 
+    const handleGenerateCharacterWithAI = async () => {
+        if (!editingItem.name_fr && !editingItem.name_en && !editingItem.name_es) {
+            setError('Veuillez entrer au moins un nom de personnage pour générer avec l\'IA');
+            return;
+        }
+
+        const characterNameInput = editingItem.name_fr || editingItem.name_en || editingItem.name_es;
+
+        setGeneratingAI(true);
+        setError(null);
+        setAiProgress('Démarrage de la génération...');
+
+        try {
+            const generated = await generateCharacterWithAI(characterNameInput, (message) => {
+                setAiProgress(message);
+            });
+
+            setEditingItem({
+                ...editingItem,
+                name_fr: generated.name_fr,
+                name_en: generated.name_en,
+                name_es: generated.name_es,
+                slug: generated.slug,
+                description_fr: generated.description_fr,
+                description_en: generated.description_en,
+                description_es: generated.description_es,
+                universe_fr: generated.universe_fr,
+                universe_en: generated.universe_en,
+                universe_es: generated.universe_es,
+            });
+            setAiProgress('✅ Génération terminée !');
+        } catch (err: any) {
+            setError(`Erreur IA: ${err.message}`);
+            setAiProgress('');
+        } finally {
+            setTimeout(() => {
+                setGeneratingAI(false);
+                setAiProgress('');
+            }, 2000);
+        }
+    };
+
     if (authLoading) return (
         <div className="min-h-screen flex items-center justify-center">
             <Loader2 className="w-12 h-12 animate-spin text-[var(--brand-pink)]" />
@@ -452,6 +494,26 @@ export function AdminPage() {
                                     )}
                                 </button>
                             )}
+                            {activeTab === 'characters' && (
+                                <button
+                                    type="button"
+                                    onClick={handleGenerateCharacterWithAI}
+                                    disabled={generatingAI || loading}
+                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {generatingAI ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            <span>Génération IA...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="w-5 h-5" />
+                                            <span>Générer avec IA</span>
+                                        </>
+                                    )}
+                                </button>
+                            )}
                             <button
                                 onClick={() => setIsEditing(false)}
                                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -477,7 +539,15 @@ export function AdminPage() {
                         </div>
                     )}
 
-                    {(activeTab === 'articles' || activeTab === 'games') && generatingAI && aiProgress && (
+                    {activeTab === 'characters' && (
+                        <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                            <p className="text-sm text-purple-700">
+                                💡 <strong>Astuce:</strong> Entrez un nom de personnage dans n'importe quelle langue, puis cliquez sur "Générer avec IA" pour créer automatiquement le nom, la description et l'univers en 3 langues.
+                            </p>
+                        </div>
+                    )}
+
+                    {(activeTab === 'articles' || activeTab === 'games' || activeTab === 'characters') && generatingAI && aiProgress && (
                         <div className="mb-6 p-6 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300 rounded-2xl shadow-lg">
                             <div className="flex items-center gap-4">
                                 <div className="relative">

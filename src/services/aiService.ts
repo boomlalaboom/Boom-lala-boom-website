@@ -70,6 +70,25 @@ interface LanguageGame {
   instructions: string;
 }
 
+export interface GeneratedCharacter {
+  name_fr: string;
+  name_en: string;
+  name_es: string;
+  slug: string;
+  description_fr: string;
+  description_en: string;
+  description_es: string;
+  universe_fr: string;
+  universe_en: string;
+  universe_es: string;
+}
+
+interface LanguageCharacter {
+  name: string;
+  description: string;
+  universe: string;
+}
+
 /**
  * Génère un slug SEO-friendly à partir d'un titre
  */
@@ -443,6 +462,166 @@ export async function generateArticleWithAI(
     };
   } catch (error) {
     console.error('Error generating article with AI:', error);
+    throw error;
+  }
+}
+
+/**
+ * Génère un personnage dans une langue spécifique
+ */
+async function generateCharacterForLanguage(
+  characterNameInput: string,
+  language: 'fr' | 'en' | 'es',
+  API_KEY: string,
+  MODEL: string,
+  useDirectOpenAI: boolean
+): Promise<LanguageCharacter> {
+  const languageNames = {
+    fr: 'français',
+    en: 'English',
+    es: 'español'
+  };
+
+  const prompt = `Génère les informations pour un personnage éducatif pour enfants en ${languageNames[language]} sur le thème: "${characterNameInput}"
+
+Public cible: Enfants de 2 à 8 ans
+Contexte: BoomLaLaBoom - plateforme éducative musicale avec des personnages mignons et attachants
+
+Réponds UNIQUEMENT avec ce JSON (pas de markdown, pas de texte avant/après):
+{
+  "name": "Nom du personnage accrocheur et mignon (20-30 caractères max)",
+  "description": "Description courte et attractive du personnage, ce qu'il aime faire (80-120 caractères max)",
+  "universe": "Description de son univers, son environnement, ce qu'il apporte aux enfants (100-150 caractères max)"
+}
+
+Le personnage doit:
+- Être attachant et mignon pour les jeunes enfants
+- Avoir une personnalité positive et encourageante
+- Être lié à la musique, l'apprentissage ou le jeu
+- Avoir un univers cohérent avec BoomLaLaBoom
+
+La description doit:
+- Être courte et facile à comprendre
+- Mettre en avant ce que le personnage aime faire
+- Utiliser un langage simple et positif`;
+
+  const API_URL = useDirectOpenAI
+    ? 'https://api.openai.com/v1/chat/completions'
+    : 'https://openrouter.ai/api/v1/chat/completions';
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${API_KEY}`,
+  };
+
+  if (!useDirectOpenAI) {
+    headers['HTTP-Referer'] = window.location.origin;
+    headers['X-Title'] = 'BoomLaLaBoom Admin';
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers,
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [{
+          role: 'user',
+          content: prompt,
+        }],
+        temperature: 0.7,
+        max_tokens: 600,
+      }),
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+
+    if (!content) {
+      throw new Error('No content generated from AI');
+    }
+
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No JSON found in AI response');
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    return parsed;
+
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+}
+
+/**
+ * Génère un personnage complet en 3 langues via IA
+ */
+export async function generateCharacterWithAI(
+  characterNameInput: string,
+  onProgress?: (message: string) => void
+): Promise<GeneratedCharacter> {
+  const API_KEY = getAPIKey();
+  let MODEL = getModel();
+
+  if (!API_KEY || API_KEY === 'your-openrouter-api-key-here') {
+    throw new Error('La clé API n\'est pas configurée. Veuillez aller dans l\'onglet "AI Settings".');
+  }
+
+  const useDirectOpenAI = isDirectOpenAI(API_KEY);
+
+  if (useDirectOpenAI && MODEL.startsWith('openai/')) {
+    MODEL = MODEL.replace('openai/', '');
+  }
+
+  if (!useDirectOpenAI && !MODEL.includes('/') && !MODEL.includes(':free')) {
+    MODEL = `openai/${MODEL}`;
+  }
+
+  try {
+    onProgress?.('Génération en français...');
+    const frCharacter = await generateCharacterForLanguage(characterNameInput, 'fr', API_KEY, MODEL, useDirectOpenAI);
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    onProgress?.('Génération en anglais...');
+    const enCharacter = await generateCharacterForLanguage(characterNameInput, 'en', API_KEY, MODEL, useDirectOpenAI);
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    onProgress?.('Génération en espagnol...');
+    const esCharacter = await generateCharacterForLanguage(characterNameInput, 'es', API_KEY, MODEL, useDirectOpenAI);
+
+    onProgress?.('Finalisation...');
+
+    const slug = generateSlug(frCharacter.name);
+
+    return {
+      name_fr: frCharacter.name,
+      name_en: enCharacter.name,
+      name_es: esCharacter.name,
+      slug,
+      description_fr: frCharacter.description,
+      description_en: enCharacter.description,
+      description_es: esCharacter.description,
+      universe_fr: frCharacter.universe,
+      universe_en: enCharacter.universe,
+      universe_es: esCharacter.universe,
+    };
+  } catch (error) {
+    console.error('Error generating character with AI:', error);
     throw error;
   }
 }
