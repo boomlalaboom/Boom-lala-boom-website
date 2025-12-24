@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Music, Gamepad2, Users, Scissors, Info, Globe, Sparkles, BookOpen, Folder, Mail, Heart, FileText } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import { useLanguage, Language } from '../contexts/LanguageContext';
@@ -11,6 +11,31 @@ export function Layout({ children }: LayoutProps) {
   const { language, setLanguage, t } = useLanguage();
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showIntro, setShowIntro] = useState(false);
+  const [introWithSound, setIntroWithSound] = useState(false);
+  const introVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const seen = sessionStorage.getItem('boomlala_intro_seen');
+    if (!seen) {
+      setShowIntro(true);
+    }
+  }, []);
+
+  const closeIntro = () => {
+    sessionStorage.setItem('boomlala_intro_seen', '1');
+    setShowIntro(false);
+  };
+
+  const enableIntroSound = () => {
+    const video = introVideoRef.current;
+    if (video) {
+      video.muted = false;
+      video.volume = 1;
+      video.play().catch(() => undefined);
+    }
+    setIntroWithSound(true);
+  };
 
   const primaryNavItems = [
     { icon: Sparkles, label: t('nav_about'), to: '/about' },
@@ -39,6 +64,47 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FFE600] to-[#FF9F00]">
+      {showIntro && (
+        <div className="fixed inset-0 z-[60] bg-[#002C72] flex items-center justify-center">
+          <video
+            src="https://rdtwxlqapkswyzxuihea.supabase.co/storage/v1/object/public/Videos/MASTER_LOGO_INTRO_16_9.mp4"
+            className="absolute inset-0 w-full h-full object-cover"
+            autoPlay
+            muted
+            playsInline
+            ref={introVideoRef}
+          />
+          <div className="absolute bottom-8 right-8 z-10 flex flex-col items-end gap-3 px-6">
+            <div className="flex flex-col items-end gap-3">
+              <button
+                onClick={enableIntroSound}
+                className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-[#FFE600] text-[#0457BA] font-bold text-lg shadow-xl hover:scale-105 transition-transform"
+              >
+                {language === 'fr' ? 'Lancer avec le son' : language === 'en' ? 'Play with sound' : 'Reproducir con sonido'}
+              </button>
+              <button
+                onClick={closeIntro}
+                className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-white/80 text-[#0457BA] font-semibold hover:bg-white transition-transform"
+              >
+                {language === 'fr' ? 'Entrer' : language === 'en' ? 'Enter' : 'Entrar'}
+              </button>
+            </div>
+            <p className="text-sm text-white/80 text-right">
+              {introWithSound
+                ? language === 'fr'
+                  ? 'Son active. Vous pouvez entrer quand vous voulez.'
+                  : language === 'en'
+                  ? 'Sound on. Enter whenever you want.'
+                  : 'Sonido activo. Entra cuando quieras.'
+                : language === 'fr'
+                ? 'Le son demarrera apres votre clic.'
+                : language === 'en'
+                ? 'Sound starts after your click.'
+                : 'El sonido empieza despues de tu clic.'}
+            </p>
+          </div>
+        </div>
+      )}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-sm shadow-md">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-[auto,1fr,auto] items-center gap-6 h-20">
