@@ -161,8 +161,15 @@ export function HomePage() {
                   <div className="absolute top-4 right-4">
                     <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse" />
                   </div>
-                  <div className="w-20 h-20 rounded-2xl bg-white shadow-md flex items-center justify-center mb-4 overflow-hidden">
-                    <img src={character.image_url} alt={getLocalizedText('name')} className="w-full h-full object-cover" />
+                  <div
+                    className="w-28 h-28 mx-auto mb-4 rounded-full flex items-center justify-center shadow-lg bg-white"
+                    style={{ border: `5px solid ${character.color_primary}` }}
+                  >
+                    <img
+                      src={character.image_url}
+                      alt={getLocalizedText('name')}
+                      className="w-full h-full object-cover rounded-full"
+                    />
                   </div>
                   <h3 className="text-xl font-bold mb-2" style={{ color: character.color_primary }}>
                     {getLocalizedText('name')}
