@@ -101,7 +101,7 @@ export function CharacterDetailPage() {
             <div className="bg-white rounded-3xl p-8 shadow-lg">
               <div className="flex items-center gap-4 mb-6">
                 <div
-                  className="w-24 h-24 rounded-2xl overflow-hidden shadow-md"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shadow-md"
                   style={{ border: `4px solid ${colorPrimary}` }}
                 >
                   <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
@@ -189,7 +189,7 @@ export function CharacterDetailPage() {
                   </a>
                 </div>
                 <div className="mt-4 rounded-2xl overflow-hidden bg-[rgba(4,87,186,0.08)]">
-                  <img src={coloringUrl} alt={name} className="w-full h-56 object-cover" />
+                  <img src={coloringUrl} alt={name} className="w-full h-48 sm:h-56 object-cover" />
                 </div>
               </div>
             </div>

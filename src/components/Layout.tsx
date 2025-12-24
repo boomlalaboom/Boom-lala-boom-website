@@ -74,17 +74,17 @@ export function Layout({ children }: LayoutProps) {
             playsInline
             ref={introVideoRef}
           />
-          <div className="absolute bottom-8 right-8 z-10 flex flex-col items-end gap-3 px-6">
+          <div className="absolute bottom-4 right-4 sm:bottom-8 sm:right-8 z-10 flex flex-col items-end gap-3 px-6">
             <div className="flex flex-col items-end gap-3">
               <button
                 onClick={enableIntroSound}
-                className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-[#FFE600] text-[#0457BA] font-bold text-lg shadow-xl hover:scale-105 transition-transform"
+                className="inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-4 rounded-full bg-[#FFE600] text-[#0457BA] font-bold text-base sm:text-lg shadow-xl hover:scale-105 transition-transform"
               >
                 {language === 'fr' ? 'Lancer avec le son' : language === 'en' ? 'Play with sound' : 'Reproducir con sonido'}
               </button>
               <button
                 onClick={closeIntro}
-                className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-white/80 text-[#0457BA] font-semibold hover:bg-white transition-transform"
+                className="inline-flex items-center justify-center px-5 py-2 sm:px-6 sm:py-3 rounded-full bg-white/80 text-[#0457BA] font-semibold text-sm sm:text-base hover:bg-white transition-transform"
               >
                 {language === 'fr' ? 'Entrer' : language === 'en' ? 'Enter' : 'Entrar'}
               </button>
@@ -110,13 +110,13 @@ export function Layout({ children }: LayoutProps) {
           <div className="grid grid-cols-[auto,1fr,auto] items-center gap-6 h-20">
             <Link
               to="/"
-              className="hover:scale-105 transition-transform -translate-x-[60px]"
+              className="hover:scale-105 transition-transform sm:-translate-x-[60px]"
             >
               <div className="relative">
                 <img
                   src="/logo_boomlalaboom.png"
                   alt="BoomLaLaBoom"
-                  className="h-24 w-auto"
+                  className="h-16 sm:h-24 w-auto"
                 />
                 <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 translate-x-[38px] text-2xl font-bold gradient-text hidden sm:inline">
                   BoomLaLaBoom
@@ -245,22 +245,22 @@ export function Layout({ children }: LayoutProps) {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
             <div className="space-y-3">
-              <div className="relative inline-block -translate-x-[53px]">
+              <div className="relative inline-block md:-translate-x-[53px]">
                 <img
                   src="/logo_boomlalaboom.png"
                   alt="BoomLaLaBoom"
-                  className="h-24 w-auto"
+                  className="h-16 sm:h-24 w-auto"
                 />
                 <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 translate-x-[38px] text-2xl font-bold footer-gradient-text">
                   BoomLaLaBoom
                 </span>
               </div>
-              <p className="text-sm md:text-base translate-x-[15px]">
+              <p className="text-sm md:text-base md:translate-x-[15px]">
                 {t('footer_tagline')}
               </p>
               <Link
                 to="/parents"
-                className="inline-flex items-center space-x-2 px-5 py-2 border-2 border-[#FFE600] rounded-full hover:bg-[#FFE600] hover:text-[#0457BA] transition-all translate-x-[15px]"
+                className="inline-flex items-center space-x-2 px-5 py-2 border-2 border-[#FFE600] rounded-full hover:bg-[#FFE600] hover:text-[#0457BA] transition-all md:translate-x-[15px]"
               >
                 <Info className="w-5 h-5" />
                 <span className="font-medium">{t('nav_parents')}</span>

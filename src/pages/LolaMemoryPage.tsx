@@ -170,12 +170,12 @@ export function LolaMemoryPage() {
             </div>
           </div>
 
-            <div className="flex flex-wrap justify-center gap-5 max-w-5xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-5 max-w-5xl mx-auto">
               {deck.map((card) => (
                 <button
                   key={card.id}
                   onClick={() => handleFlip(card.id)}
-                  className={`relative w-28 h-40 sm:w-32 sm:h-44 md:w-36 md:h-52 rounded-2xl transition-all duration-300 shadow-lg ${
+                  className={`relative w-24 h-32 sm:w-28 sm:h-40 md:w-36 md:h-52 rounded-2xl transition-all duration-300 shadow-lg ${
                     isFlipped(card.id)
                       ? 'bg-white scale-105'
                       : 'bg-gradient-to-br from-[#FFE600] to-[#FF9F00] hover:scale-105'

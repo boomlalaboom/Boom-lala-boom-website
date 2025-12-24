@@ -2,7 +2,14 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 
-export function SeoHead() {
+interface SeoHeadProps {
+  title?: string;
+  description?: string;
+  image?: string;
+  jsonLd?: Record<string, unknown>;
+}
+
+export function SeoHead({ title: overrideTitle, description: overrideDescription, image, jsonLd }: SeoHeadProps) {
   const { t } = useLanguage();
   const location = useLocation();
 
@@ -21,8 +28,11 @@ export function SeoHead() {
     };
 
     const meta = pageMeta[location.pathname];
-    const title = meta ? `${t('meta_title')} - ${meta.title}` : t('meta_title');
-    const description = meta ? meta.description : t('meta_description');
+    const title = overrideTitle || (meta ? `${t('meta_title')} - ${meta.title}` : t('meta_title'));
+    const description = overrideDescription || (meta ? meta.description : t('meta_description'));
+    const siteUrl = window.location.origin;
+    const canonicalUrl = `${siteUrl}${location.pathname}`;
+    const imageUrl = image || `${siteUrl}/logo_boomlalaboom.png`;
 
     document.title = title;
 
@@ -62,7 +72,48 @@ export function SeoHead() {
     if (twitterDescription) {
       twitterDescription.setAttribute('content', description);
     }
-  }, [location.pathname, t]);
+
+    const ogImage = ensureMeta('meta[property="og:image"]', { property: 'og:image' });
+    if (ogImage) {
+      ogImage.setAttribute('content', imageUrl);
+    }
+
+    const twitterImage = ensureMeta('meta[name="twitter:image"]', { name: 'twitter:image' });
+    if (twitterImage) {
+      twitterImage.setAttribute('content', imageUrl);
+    }
+
+    const ogUrl = ensureMeta('meta[property="og:url"]', { property: 'og:url' });
+    if (ogUrl) {
+      ogUrl.setAttribute('content', canonicalUrl);
+    }
+
+    let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', canonicalUrl);
+
+    const defaultJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'BoomLaLaBoom',
+      url: siteUrl,
+      description,
+    };
+
+    const payload = jsonLd || defaultJsonLd;
+    let script = document.querySelector<HTMLScriptElement>('script[data-seo="jsonld"]');
+    if (!script) {
+      script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.setAttribute('data-seo', 'jsonld');
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(payload);
+  }, [location.pathname, t, overrideTitle, overrideDescription, image, jsonLd]);
 
   return null;
 }

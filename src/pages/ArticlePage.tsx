@@ -163,10 +163,34 @@ export function ArticlePage() {
   const content = getLocalizedField(article, 'content');
   const metaTitle = getLocalizedField(article, 'meta_title') || title;
   const metaDescription = getLocalizedField(article, 'meta_description') || getLocalizedField(article, 'excerpt');
+  const imageUrl = article.thumbnail_url || '/logo_boomlalaboom.png';
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: metaTitle,
+    description: metaDescription,
+    image: imageUrl,
+    author: {
+      '@type': 'Organization',
+      name: article.author_name || 'BoomLaLaBoom',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'BoomLaLaBoom',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${window.location.origin}/logo_boomlalaboom.png`,
+      },
+    },
+    datePublished: article.published_at,
+    dateModified: article.updated_at || article.published_at,
+    mainEntityOfPage: `${window.location.origin}/blog/${getSlug(article)}`,
+  };
 
   return (
     <>
-      <SeoHead title={metaTitle} description={metaDescription} />
+      <SeoHead title={metaTitle} description={metaDescription} image={imageUrl} jsonLd={jsonLd} />
 
       <article className="py-8 px-4 bg-gradient-to-b from-[var(--accent-yellow)] to-[var(--accent-orange)]">
         {/* Back button */}

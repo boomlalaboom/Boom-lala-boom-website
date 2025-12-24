@@ -110,10 +110,10 @@ export function HomePage() {
             <div className="flex justify-center mb-8">
               <AnimatedLogo size={300} />
             </div>
-            <h1 className="text-4xl md:text-6xl font-black mb-6 text-[#FFE600] leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-black mb-6 text-[#FFE600] leading-tight">
               {t('home_hero_title')}
             </h1>
-            <p className="text-2xl md:text-3xl text-[#FF9F00] font-medium mb-8">
+            <p className="text-xl sm:text-2xl md:text-3xl text-[#FF9F00] font-medium mb-8">
               {t('home_hero_subtitle')}
             </p>
 
