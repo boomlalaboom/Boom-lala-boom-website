@@ -89,9 +89,8 @@ export async function convertToWebP(
 /**
  * Génère un nom de fichier basé sur le slug de l'article
  */
-export function generateImageFileName(articleSlug: string): string {
+export function generateImageFileName(articleSlug: string, suffix?: string): string {
   const timestamp = Date.now();
-  const randomStr = Math.random().toString(36).substring(2, 8);
   // Nettoyer le slug pour le nom de fichier
   const cleanSlug = articleSlug
     .toLowerCase()
@@ -99,7 +98,13 @@ export function generateImageFileName(articleSlug: string): string {
     .replace(/-+/g, '-')
     .substring(0, 50);
 
-  return `${cleanSlug}-${timestamp}-${randomStr}.webp`;
+  const cleanSuffix = suffix
+    ? suffix.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').substring(0, 30)
+    : undefined;
+
+  return cleanSuffix
+    ? `${cleanSlug}-${cleanSuffix}-${timestamp}.webp`
+    : `${cleanSlug}-${timestamp}.webp`;
 }
 
 /**
@@ -107,17 +112,17 @@ export function generateImageFileName(articleSlug: string): string {
  */
 export async function uploadImageToSupabase(
   blob: Blob,
-  fileName: string,
+  filePath: string,
   bucket: string = 'article-images'
 ): Promise<string> {
   try {
     // Upload vers Supabase Storage
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(`public/${fileName}`, blob, {
+      .upload(filePath, blob, {
         contentType: 'image/webp',
         cacheControl: '31536000', // 1 an de cache
-        upsert: false,
+        upsert: true,
       });
 
     if (error) {
@@ -127,7 +132,7 @@ export async function uploadImageToSupabase(
     // Récupérer l'URL publique
     const { data: { publicUrl } } = supabase.storage
       .from(bucket)
-      .getPublicUrl(`public/${fileName}`);
+      .getPublicUrl(filePath);
 
     return publicUrl;
   } catch (error) {
@@ -143,17 +148,20 @@ export async function processAndUploadImage(
   file: File,
   articleSlug: string,
   options?: ImageProcessingOptions,
-  bucket: string = 'article-images'
+  bucket: string = 'article-images',
+  filePath?: string,
+  suffix?: string
 ): Promise<string> {
   try {
     // 1. Convertir en WebP et compresser
     const webpBlob = await convertToWebP(file, options);
 
     // 2. Générer un nom de fichier
-    const fileName = generateImageFileName(articleSlug);
+    const fileName = generateImageFileName(articleSlug, suffix);
+    const resolvedPath = filePath || `public/${fileName}`;
 
     // 3. Upload vers Supabase
-    const publicUrl = await uploadImageToSupabase(webpBlob, fileName, bucket);
+    const publicUrl = await uploadImageToSupabase(webpBlob, resolvedPath, bucket);
 
     return publicUrl;
   } catch (error) {
@@ -171,9 +179,10 @@ export async function deleteImageFromSupabase(
 ): Promise<void> {
   try {
     // Extraire le chemin du fichier de l'URL
-    const urlParts = imageUrl.split('/');
-    const fileName = urlParts[urlParts.length - 1];
-    const filePath = `public/${fileName}`;
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    const filePath = imageUrl.includes(marker)
+      ? imageUrl.split(marker)[1]
+      : imageUrl.split('/').slice(-2).join('/');
 
     const { error } = await supabase.storage
       .from(bucket)

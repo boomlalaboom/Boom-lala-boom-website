@@ -19,6 +19,13 @@ export interface Character {
   description_en: string;
   description_es: string;
   image_url: string;
+  coloring_url?: string;
+  universe_fr?: string;
+  universe_en?: string;
+  universe_es?: string;
+  video_id_fr?: string;
+  video_id_en?: string;
+  video_id_es?: string;
   color_primary: string;
   color_secondary: string;
   order_position: number;

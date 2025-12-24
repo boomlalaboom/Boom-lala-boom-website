@@ -6,11 +6,21 @@ interface ImageUploaderProps {
   currentImageUrl?: string;
   onImageUploaded: (url: string) => void;
   articleSlug?: string;
-  bucket?: 'article-images' | 'game-images';
+  bucket?: 'article-images' | 'game-images' | 'personnage';
   label?: string;
+  pathPrefix?: string;
+  fileSuffix?: string;
 }
 
-export function ImageUploader({ currentImageUrl, onImageUploaded, articleSlug, bucket = 'article-images', label }: ImageUploaderProps) {
+export function ImageUploader({
+  currentImageUrl,
+  onImageUploaded,
+  articleSlug,
+  bucket = 'article-images',
+  label,
+  pathPrefix,
+  fileSuffix,
+}: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImageUrl || null);
   const [error, setError] = useState<string | null>(null);
@@ -57,11 +67,21 @@ export function ImageUploader({ currentImageUrl, onImageUploaded, articleSlug, b
       }
 
       // Convertir, compresser et uploader
-      const publicUrl = await processAndUploadImage(file, articleSlug, {
-        maxWidth: 1200,
-        maxHeight: 800,
-        quality: 0.85,
-      }, bucket);
+      const prefix = pathPrefix ? pathPrefix.replace(/\/$/, '') : 'public';
+      const filePath = `${prefix}/${articleSlug}/${articleSlug}-${fileSuffix || 'image'}.webp`;
+
+      const publicUrl = await processAndUploadImage(
+        file,
+        articleSlug,
+        {
+          maxWidth: 1200,
+          maxHeight: 800,
+          quality: 0.85,
+        },
+        bucket,
+        filePath,
+        fileSuffix
+      );
 
       onImageUploaded(publicUrl);
     } catch (err) {

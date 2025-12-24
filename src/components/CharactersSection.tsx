@@ -25,6 +25,16 @@ export function CharactersSection({
     return (obj[key] as string) || (obj[`${field}_fr` as keyof Character] as string) || '';
   };
 
+  // Utiliser uniquement les données de Supabase
+  const displayCharacters = characters.map((character) => ({
+    slug: character.slug,
+    name: getLocalizedText(character, 'name'),
+    description: getLocalizedText(character, 'description'),
+    imageUrl: character.image_url,
+    colorPrimary: character.color_primary,
+    colorSecondary: character.color_secondary,
+  }));
+
   return (
     <section
       id="characters"
@@ -44,9 +54,9 @@ export function CharactersSection({
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {characters.map((character, index) => (
+          {displayCharacters.map((character, index) => (
             <div
-              key={character.id}
+              key={character.slug}
               className="group relative bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 animate-slide-up"
               style={{
                 animationDelay: `${index * 100}ms`,
@@ -64,47 +74,40 @@ export function CharactersSection({
                 </div>
 
                 <div
-                  className="w-32 h-32 mx-auto mb-6 rounded-full flex items-center justify-center text-6xl shadow-lg"
+                  className="w-32 h-32 mx-auto mb-6 rounded-full flex items-center justify-center text-6xl shadow-lg bg-white"
                   style={{
-                    background: `linear-gradient(135deg, ${character.color_primary}, ${character.color_secondary})`,
+                    border: `6px solid ${character.colorPrimary}`,
                   }}
                 >
-                  {character.image_url ? (
-                    <img
-                      src={character.image_url}
-                      alt={getLocalizedText(character, 'name')}
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  ) : (
-                    <span className="text-white">
-                      {character.slug === 'lola-the-cow' ? '🐮' :
-                        character.slug === 'baby-shark-family' ? '🦈' :
-                          character.slug === 'vehicles-crew' ? '🚗' : '⭐'}
-                    </span>
-                  )}
+                  <img
+                    src={character.imageUrl}
+                    alt={character.name}
+                    className="w-full h-full object-cover rounded-full"
+                  />
                 </div>
 
                 <h3
                   className="text-xl font-black text-center mb-4"
-                  style={{ color: character.color_primary }}
+                  style={{ color: character.colorPrimary }}
                 >
-                  {getLocalizedText(character, 'name')}
+                  {character.name}
                 </h3>
 
                 <p className="text-gray-600 text-center mb-6 leading-relaxed">
-                  {getLocalizedText(character, 'description')}
+                  {character.description}
                 </p>
 
                 <div className="flex justify-center">
-                  <button
+                  <Link
+                    to={`/characters/${character.slug}`}
                     className="flex items-center space-x-2 px-6 py-3 rounded-full text-white font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
                     style={{
-                      background: `linear-gradient(135deg, ${character.color_primary}, ${character.color_secondary})`,
+                      background: `linear-gradient(135deg, ${character.colorPrimary}, ${character.colorSecondary})`,
                     }}
                   >
                     <Heart className="w-5 h-5" />
                     <span>{t('home_cta_discover')}</span>
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

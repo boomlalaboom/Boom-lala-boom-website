@@ -1,0 +1,35 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Handle/Manche -->
+  <rect x="95" y="5" width="8" height="60" rx="4" fill="#8B4513" stroke="#654321" stroke-width="2"/>
+
+  <!-- Net rim/Cerceau -->
+  <ellipse cx="60" cy="45" rx="45" ry="8" fill="none" stroke="#4A4A4A" stroke-width="3"/>
+
+  <!-- Net mesh/Filet - effet de maillage -->
+  <g opacity="0.8">
+    <!-- Lignes verticales -->
+    <path d="M 25 45 Q 25 70, 30 90" stroke="#00CED1" stroke-width="1.5" fill="none" opacity="0.7"/>
+    <path d="M 35 45 Q 35 75, 38 95" stroke="#00CED1" stroke-width="1.5" fill="none" opacity="0.7"/>
+    <path d="M 45 45 Q 45 80, 45 100" stroke="#00CED1" stroke-width="1.5" fill="none" opacity="0.7"/>
+    <path d="M 55 45 Q 55 80, 53 100" stroke="#00CED1" stroke-width="1.5" fill="none" opacity="0.7"/>
+    <path d="M 65 45 Q 65 80, 62 100" stroke="#00CED1" stroke-width="1.5" fill="none" opacity="0.7"/>
+    <path d="M 75 45 Q 75 75, 70 95" stroke="#00CED1" stroke-width="1.5" fill="none" opacity="0.7"/>
+    <path d="M 85 45 Q 85 70, 78 90" stroke="#00CED1" stroke-width="1.5" fill="none" opacity="0.7"/>
+
+    <!-- Lignes horizontales courbes -->
+    <path d="M 25 50 Q 55 55, 85 50" stroke="#00CED1" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <path d="M 26 60 Q 55 66, 84 60" stroke="#00CED1" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <path d="M 28 70 Q 55 77, 82 70" stroke="#00CED1" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <path d="M 30 80 Q 55 88, 78 80" stroke="#00CED1" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <path d="M 33 90 Q 54 97, 73 90" stroke="#00CED1" stroke-width="1.5" fill="none" opacity="0.6"/>
+
+    <!-- Diagonales pour effet de filet -->
+    <path d="M 25 50 L 35 60 M 35 50 L 45 60 M 45 50 L 55 60" stroke="#00CED1" stroke-width="1" fill="none" opacity="0.4"/>
+    <path d="M 55 50 L 65 60 M 65 50 L 75 60 M 75 50 L 85 60" stroke="#00CED1" stroke-width="1" fill="none" opacity="0.4"/>
+    <path d="M 26 60 L 36 70 M 38 60 L 48 70 M 48 60 L 58 70" stroke="#00CED1" stroke-width="1" fill="none" opacity="0.4"/>
+    <path d="M 58 60 L 68 70 M 68 60 L 78 70 M 78 60 L 84 70" stroke="#00CED1" stroke-width="1" fill="none" opacity="0.4"/>
+  </g>
+
+  <!-- Connection entre le manche et le cerceau -->
+  <line x1="99" y1="40" x2="85" y2="43" stroke="#654321" stroke-width="3" stroke-linecap="round"/>
+</svg>

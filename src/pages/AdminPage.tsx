@@ -5,10 +5,10 @@ import { useNavigate } from 'react-router-dom';
 import {
     Plus, Edit2, Trash2, Save, X,
     Music, Gamepad2, Users, Scissors, BookOpen,
-    LogOut, Loader2, AlertCircle, Sparkles, Settings
+    LogOut, Loader2, AlertCircle, Sparkles, Settings, GripVertical
 } from 'lucide-react';
 import { ImageUploader } from '../components/ImageUploader';
-import { generateArticleWithAI } from '../services/aiService';
+import { generateArticleWithAI, generateGameWithAI } from '../services/aiService';
 
 type Tab = 'characters' | 'songs' | 'games' | 'activities' | 'articles' | 'settings';
 
@@ -23,6 +23,11 @@ export function AdminPage() {
     const [error, setError] = useState<string | null>(null);
     const [generatingAI, setGeneratingAI] = useState(false);
     const [aiProgress, setAiProgress] = useState('');
+
+    // Character reordering
+    const [reorderMode, setReorderMode] = useState(false);
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [savingOrder, setSavingOrder] = useState(false);
 
     // AI Settings
     const [aiApiKey, setAiApiKey] = useState(localStorage.getItem('ai_api_key') || '');
@@ -45,10 +50,11 @@ export function AdminPage() {
         setLoading(true);
         setError(null);
         try {
+            const orderBy = activeTab === 'characters' ? 'order_position' : 'created_at';
             const { data, error } = await supabase
                 .from(activeTab)
                 .select('*')
-                .order('created_at', { ascending: false });
+                .order(orderBy, { ascending: activeTab === 'characters' ? true : false });
 
             if (error) throw error;
             setItems(data || []);
@@ -142,7 +148,19 @@ export function AdminPage() {
             description_fr: '', description_en: '', description_es: '',
         };
 
-        if (activeTab === 'songs') {
+        if (activeTab === 'characters') {
+            emptyItem.image_url = '';
+            emptyItem.coloring_url = '';
+            emptyItem.universe_fr = '';
+            emptyItem.universe_en = '';
+            emptyItem.universe_es = '';
+            emptyItem.video_id_fr = '';
+            emptyItem.video_id_en = '';
+            emptyItem.video_id_es = '';
+            emptyItem.color_primary = '#FF6B6B';
+            emptyItem.color_secondary = '#FFD93D';
+            emptyItem.order_position = 1;
+        } else if (activeTab === 'songs') {
             emptyItem.title_fr = ''; emptyItem.title_en = ''; emptyItem.title_es = '';
             emptyItem.youtube_id_fr = ''; emptyItem.youtube_id_en = ''; emptyItem.youtube_id_es = '';
             emptyItem.is_featured = false;
@@ -152,6 +170,7 @@ export function AdminPage() {
             emptyItem.difficulty = 'easy';
             emptyItem.is_featured = false;
             emptyItem.age_min = 3; emptyItem.age_max = 8;
+            emptyItem.instructions_fr = ''; emptyItem.instructions_en = ''; emptyItem.instructions_es = '';
         } else if (activeTab === 'activities') {
             emptyItem.activity_type = 'coloring';
             emptyItem.age_min = 3; emptyItem.age_max = 8;
@@ -224,6 +243,100 @@ export function AdminPage() {
                 setAiProgress('');
             }, 2000);
         }
+    };
+
+    const handleGenerateGameWithAI = async () => {
+        if (!editingItem.name_fr && !editingItem.name_en && !editingItem.name_es) {
+            setError('Veuillez entrer au moins un nom de jeu pour générer avec l\'IA');
+            return;
+        }
+
+        const gameNameInput = editingItem.name_fr || editingItem.name_en || editingItem.name_es;
+
+        setGeneratingAI(true);
+        setError(null);
+        setAiProgress('Démarrage de la génération...');
+
+        try {
+            const generated = await generateGameWithAI(gameNameInput, (message) => {
+                setAiProgress(message);
+            });
+
+            setEditingItem({
+                ...editingItem,
+                name_fr: generated.name_fr,
+                name_en: generated.name_en,
+                name_es: generated.name_es,
+                slug: generated.slug,
+                description_fr: generated.description_fr,
+                description_en: generated.description_en,
+                description_es: generated.description_es,
+                instructions_fr: generated.instructions_fr,
+                instructions_en: generated.instructions_en,
+                instructions_es: generated.instructions_es,
+            });
+            setAiProgress('✅ Génération terminée !');
+        } catch (err: any) {
+            setError(`Erreur IA: ${err.message}`);
+            setAiProgress('');
+        } finally {
+            setTimeout(() => {
+                setGeneratingAI(false);
+                setAiProgress('');
+            }, 2000);
+        }
+    };
+
+    // Character reordering handlers
+    const handleDragStart = (index: number) => {
+        setDraggedIndex(index);
+    };
+
+    const handleDragOver = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        if (draggedIndex === null || draggedIndex === index) return;
+
+        const newItems = [...items];
+        const draggedItem = newItems[draggedIndex];
+        newItems.splice(draggedIndex, 1);
+        newItems.splice(index, 0, draggedItem);
+
+        setItems(newItems);
+        setDraggedIndex(index);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+    };
+
+    const saveCharacterOrder = async () => {
+        setSavingOrder(true);
+        setError(null);
+        try {
+            const updates = items.map((item, index) => ({
+                id: item.id,
+                order_position: index + 1,
+            }));
+
+            for (const update of updates) {
+                await supabase
+                    .from('characters')
+                    .update({ order_position: update.order_position })
+                    .eq('id', update.id);
+            }
+
+            setReorderMode(false);
+            await fetchItems();
+        } catch (err: any) {
+            setError(`Erreur lors de la sauvegarde: ${err.message}`);
+        } finally {
+            setSavingOrder(false);
+        }
+    };
+
+    const cancelReorder = () => {
+        setReorderMode(false);
+        fetchItems();
     };
 
     if (authLoading) return (
@@ -319,6 +432,26 @@ export function AdminPage() {
                                     )}
                                 </button>
                             )}
+                            {activeTab === 'games' && (
+                                <button
+                                    type="button"
+                                    onClick={handleGenerateGameWithAI}
+                                    disabled={generatingAI || loading}
+                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {generatingAI ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            <span>Génération IA...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="w-5 h-5" />
+                                            <span>Générer avec IA</span>
+                                        </>
+                                    )}
+                                </button>
+                            )}
                             <button
                                 onClick={() => setIsEditing(false)}
                                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -336,7 +469,15 @@ export function AdminPage() {
                         </div>
                     )}
 
-                    {activeTab === 'articles' && generatingAI && aiProgress && (
+                    {activeTab === 'games' && (
+                        <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                            <p className="text-sm text-purple-700">
+                                💡 <strong>Astuce:</strong> Entrez un nom de jeu dans n'importe quelle langue, puis cliquez sur "Générer avec IA" pour créer automatiquement le nom, la description et les instructions en 3 langues.
+                            </p>
+                        </div>
+                    )}
+
+                    {(activeTab === 'articles' || activeTab === 'games') && generatingAI && aiProgress && (
                         <div className="mb-6 p-6 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300 rounded-2xl shadow-lg">
                             <div className="flex items-center gap-4">
                                 <div className="relative">
@@ -396,6 +537,41 @@ export function AdminPage() {
                                             className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-[var(--brand-pink)] outline-none"
                                             placeholder="lola-the-cow"
                                         />
+                                    </div>
+                                )}
+
+                                {/* Character Colors + Order */}
+                                {activeTab === 'characters' && (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Couleur primaire</label>
+                                            <input
+                                                type="text"
+                                                value={editingItem.color_primary || ''}
+                                                onChange={(e) => setEditingItem({ ...editingItem, color_primary: e.target.value })}
+                                                className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-[var(--brand-pink)] outline-none"
+                                                placeholder="#FF6B6B"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Couleur secondaire</label>
+                                            <input
+                                                type="text"
+                                                value={editingItem.color_secondary || ''}
+                                                onChange={(e) => setEditingItem({ ...editingItem, color_secondary: e.target.value })}
+                                                className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-[var(--brand-pink)] outline-none"
+                                                placeholder="#FFD93D"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Ordre d affichage</label>
+                                            <input
+                                                type="number"
+                                                value={editingItem.order_position || 1}
+                                                onChange={(e) => setEditingItem({ ...editingItem, order_position: parseInt(e.target.value, 10) || 1 })}
+                                                className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-[var(--brand-pink)] outline-none"
+                                            />
+                                        </div>
                                     </div>
                                 )}
 
@@ -548,6 +724,36 @@ export function AdminPage() {
                                     </div>
                                 )}
 
+                                {/* Character Images */}
+                                {activeTab === 'characters' && (
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Image du personnage</label>
+                                            <ImageUploader
+                                                currentImageUrl={editingItem.image_url}
+                                                onImageUploaded={(url) => setEditingItem({ ...editingItem, image_url: url })}
+                                                articleSlug={editingItem.slug}
+                                                bucket="personnage"
+                                                pathPrefix="characters"
+                                                fileSuffix="avatar"
+                                                label="Image principale (JPEG/PNG → WebP)"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Coloriage du personnage</label>
+                                            <ImageUploader
+                                                currentImageUrl={editingItem.coloring_url}
+                                                onImageUploaded={(url) => setEditingItem({ ...editingItem, coloring_url: url })}
+                                                articleSlug={editingItem.slug}
+                                                bucket="personnage"
+                                                pathPrefix="characters"
+                                                fileSuffix="coloring"
+                                                label="Coloriage (JPEG/PNG → WebP)"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Game Thumbnail Image */}
                                 {activeTab === 'games' && (
                                     <div>
@@ -576,6 +782,68 @@ export function AdminPage() {
                                                     onChange={(e) => setEditingItem({ ...editingItem, [`description_${lang}`]: e.target.value })}
                                                     rows={4}
                                                     className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-[var(--brand-pink)] outline-none resize-none"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Game Instructions */}
+                            {activeTab === 'games' && (
+                                <div className="md:col-span-2 space-y-4">
+                                    <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">Instructions</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        {['fr', 'en', 'es'].map((lang) => (
+                                            <div key={lang}>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Instructions ({lang.toUpperCase()})</label>
+                                                <textarea
+                                                    value={editingItem[`instructions_${lang}`] || ''}
+                                                    onChange={(e) => setEditingItem({ ...editingItem, [`instructions_${lang}`]: e.target.value })}
+                                                    rows={5}
+                                                    className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-[var(--brand-pink)] outline-none resize-none"
+                                                    placeholder={lang === 'fr' ? 'Comment jouer à ce jeu...' : lang === 'en' ? 'How to play this game...' : 'Cómo jugar este juego...'}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Characters Universe */}
+                            {activeTab === 'characters' && (
+                                <div className="md:col-span-2 space-y-4">
+                                    <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">Univers</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        {['fr', 'en', 'es'].map((lang) => (
+                                            <div key={lang}>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Univers ({lang.toUpperCase()})</label>
+                                                <textarea
+                                                    value={editingItem[`universe_${lang}`] || ''}
+                                                    onChange={(e) => setEditingItem({ ...editingItem, [`universe_${lang}`]: e.target.value })}
+                                                    rows={3}
+                                                    className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-[var(--brand-pink)] outline-none resize-none"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Characters Video IDs */}
+                            {activeTab === 'characters' && (
+                                <div className="md:col-span-2 space-y-4">
+                                    <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">Videos (YouTube ID)</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        {['fr', 'en', 'es'].map((lang) => (
+                                            <div key={lang}>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">YouTube ID ({lang.toUpperCase()})</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingItem[`video_id_${lang}`] || ''}
+                                                    onChange={(e) => setEditingItem({ ...editingItem, [`video_id_${lang}`]: e.target.value })}
+                                                    className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-[var(--brand-pink)] outline-none"
+                                                    placeholder="XqZsoesa55w"
                                                 />
                                             </div>
                                         ))}
@@ -646,20 +914,90 @@ export function AdminPage() {
                     </form>
                 </div>
             ) : activeTab !== 'settings' && (
-                <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
-                    <div className="p-6 border-b flex items-center justify-between bg-gray-50/50">
-                        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 capitalize">
-                            {activeTab} List
-                            <span className="text-sm font-normal text-gray-400 ml-2">({items.length} items)</span>
-                        </h2>
-                        <button
-                            onClick={startNew}
-                            className="flex items-center gap-2 px-4 py-2 bg-[var(--brand-pink)] text-white font-bold rounded-xl hover:bg-[var(--brand-red)] transition-colors shadow-sm"
-                        >
-                            <Plus className="w-5 h-5" />
-                            Add New
-                        </button>
+                <>
+                {activeTab === 'characters' && reorderMode ? (
+                    <div className="bg-white rounded-3xl shadow-xl overflow-hidden p-8">
+                        <div className="flex items-center justify-between mb-8">
+                            <h2 className="text-2xl font-bold text-[var(--brand-blue)]">
+                                Réorganiser les personnages
+                            </h2>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={cancelReorder}
+                                    disabled={savingOrder}
+                                    className="flex items-center gap-2 px-6 py-3 bg-gray-500 text-white font-bold rounded-xl hover:bg-gray-600 transition-all disabled:opacity-50"
+                                >
+                                    <X className="w-5 h-5" />
+                                    Annuler
+                                </button>
+                                <button
+                                    onClick={saveCharacterOrder}
+                                    disabled={savingOrder}
+                                    className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-all disabled:opacity-50"
+                                >
+                                    {savingOrder ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                    {savingOrder ? 'Sauvegarde...' : 'Sauvegarder'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            {items.map((item, index) => (
+                                <div
+                                    key={item.id}
+                                    draggable
+                                    onDragStart={() => handleDragStart(index)}
+                                    onDragOver={(e) => handleDragOver(e, index)}
+                                    onDragEnd={handleDragEnd}
+                                    className={`bg-white rounded-xl p-4 shadow-md cursor-move transition-all border-2 ${
+                                        draggedIndex === index ? 'opacity-50 border-[var(--brand-pink)]' : 'border-gray-200 hover:border-[var(--brand-blue)] hover:shadow-lg'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <GripVertical className="w-6 h-6 text-gray-400" />
+                                        <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border-2" style={{ borderColor: item.color_primary }}>
+                                            <img src={item.image_url} alt={item.name_fr} className="w-full h-full object-cover" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-lg" style={{ color: item.color_primary }}>
+                                                {item.name_fr}
+                                            </h3>
+                                            <p className="text-gray-600 text-sm truncate">{item.description_fr}</p>
+                                        </div>
+                                        <div className="text-sm text-gray-500 font-medium bg-gray-100 px-3 py-1 rounded-full">
+                                            #{index + 1}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
+                ) : (
+                    <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+                        <div className="p-6 border-b flex items-center justify-between bg-gray-50/50">
+                            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 capitalize">
+                                {activeTab} List
+                                <span className="text-sm font-normal text-gray-400 ml-2">({items.length} items)</span>
+                            </h2>
+                            <div className="flex items-center gap-3">
+                                {activeTab === 'characters' && items.length > 0 && (
+                                    <button
+                                        onClick={() => setReorderMode(true)}
+                                        className="flex items-center gap-2 px-4 py-2 bg-[var(--brand-blue)] text-white font-bold rounded-xl hover:shadow-lg transition-all"
+                                    >
+                                        <GripVertical className="w-5 h-5" />
+                                        Réorganiser
+                                    </button>
+                                )}
+                                <button
+                                    onClick={startNew}
+                                    className="flex items-center gap-2 px-4 py-2 bg-[var(--brand-pink)] text-white font-bold rounded-xl hover:bg-[var(--brand-red)] transition-colors shadow-sm"
+                                >
+                                    <Plus className="w-5 h-5" />
+                                    Add New
+                                </button>
+                            </div>
+                        </div>
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
@@ -754,6 +1092,8 @@ export function AdminPage() {
                         </table>
                     </div>
                 </div>
+                )}
+                </>
             )}
 
             {/* AI Settings Tab */}

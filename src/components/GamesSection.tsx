@@ -55,6 +55,10 @@ export function GamesSection({
     return game.slug === 'lola-memory' || (game.game_type === 'memory' && /lola/i.test(game.slug));
   };
 
+  const isSharkRhythm = (game: Game) => {
+    return game.slug === 'shark-rhythm' || game.slug === 'rythme-requin' || (game.game_type === 'rhythm' && /shark|requin/i.test(game.slug));
+  };
+
   return (
     <section id="games" className="py-16 px-4 section-bg-yellow screen-section">
       <div className="container mx-auto">
@@ -122,6 +126,14 @@ export function GamesSection({
                 {isLolaMemory(game) ? (
                   <Link
                     to="/games/lola-memory"
+                    className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-teal)] text-white rounded-full font-bold text-lg transition-all group-hover:scale-105"
+                  >
+                    <Gamepad2 className="w-5 h-5" />
+                    <span>{t('play_now')}</span>
+                  </Link>
+                ) : isSharkRhythm(game) ? (
+                  <Link
+                    to="/games/shark-rhythm"
                     className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-teal)] text-white rounded-full font-bold text-lg transition-all group-hover:scale-105"
                   >
                     <Gamepad2 className="w-5 h-5" />

@@ -1,5 +1,5 @@
 /**
- * Service de génération d'articles via IA (OpenRouter ou OpenAI direct)
+ * Service de génération d'articles et jeux via IA (OpenRouter ou OpenAI direct)
  * Génère chaque langue séparément pour éviter les limites de tokens
  */
 
@@ -49,6 +49,25 @@ interface LanguageArticle {
   content: string;
   meta_title: string;
   meta_description: string;
+}
+
+export interface GeneratedGame {
+  name_fr: string;
+  name_en: string;
+  name_es: string;
+  slug: string;
+  description_fr: string;
+  description_en: string;
+  description_es: string;
+  instructions_fr: string;
+  instructions_en: string;
+  instructions_es: string;
+}
+
+interface LanguageGame {
+  name: string;
+  description: string;
+  instructions: string;
 }
 
 /**
@@ -171,6 +190,174 @@ Le contenu HTML doit:
 
   } catch (error: any) {
     clearTimeout(timeoutId);
+    throw error;
+  }
+}
+
+/**
+ * Génère un jeu dans une langue spécifique
+ */
+async function generateGameForLanguage(
+  gameNameInput: string,
+  language: 'fr' | 'en' | 'es',
+  API_KEY: string,
+  MODEL: string,
+  useDirectOpenAI: boolean
+): Promise<LanguageGame> {
+  const languageNames = {
+    fr: 'français',
+    en: 'English',
+    es: 'español'
+  };
+
+  const prompt = `Génère les informations pour un jeu éducatif pour enfants en ${languageNames[language]} sur le thème: "${gameNameInput}"
+
+Public cible: Enfants de 2 à 8 ans
+Contexte: BoomLaLaBoom - plateforme éducative musicale
+
+Réponds UNIQUEMENT avec ce JSON (pas de markdown, pas de texte avant/après):
+{
+  "name": "Nom du jeu accrocheur (30-40 caractères max)",
+  "description": "Description attractive et éducative du jeu (100-150 caractères max)",
+  "instructions": "Instructions détaillées et claires pour jouer (200-300 caractères max)"
+}
+
+Les instructions doivent:
+- Être simples et adaptées aux jeunes enfants
+- Expliquer comment jouer étape par étape
+- Être courtes et faciles à comprendre
+- Utiliser un langage positif et encourageant
+
+La description doit:
+- Mettre en avant l'aspect ludique ET éducatif
+- Mentionner les bénéfices pour l'enfant
+- Être captivante pour les parents`;
+
+  const API_URL = useDirectOpenAI
+    ? 'https://api.openai.com/v1/chat/completions'
+    : 'https://openrouter.ai/api/v1/chat/completions';
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${API_KEY}`,
+  };
+
+  if (!useDirectOpenAI) {
+    headers['HTTP-Referer'] = window.location.origin;
+    headers['X-Title'] = 'BoomLaLaBoom Admin';
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 secondes
+
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers,
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [{
+          role: 'user',
+          content: prompt,
+        }],
+        temperature: 0.7,
+        max_tokens: 800,
+      }),
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+
+    if (!content) {
+      throw new Error('No content generated from AI');
+    }
+
+    // Parser le JSON
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No JSON found in AI response');
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    return parsed;
+
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+}
+
+/**
+ * Génère un jeu complet en 3 langues via IA
+ */
+export async function generateGameWithAI(
+  gameNameInput: string,
+  onProgress?: (message: string) => void
+): Promise<GeneratedGame> {
+  // Récupérer la configuration
+  const API_KEY = getAPIKey();
+  let MODEL = getModel();
+
+  if (!API_KEY || API_KEY === 'your-openrouter-api-key-here') {
+    throw new Error('La clé API n\'est pas configurée. Veuillez aller dans l\'onglet "AI Settings".');
+  }
+
+  const useDirectOpenAI = isDirectOpenAI(API_KEY);
+
+  // Ajuster le nom du modèle
+  if (useDirectOpenAI && MODEL.startsWith('openai/')) {
+    MODEL = MODEL.replace('openai/', '');
+  }
+
+  if (!useDirectOpenAI && !MODEL.includes('/') && !MODEL.includes(':free')) {
+    MODEL = `openai/${MODEL}`;
+  }
+
+  try {
+    // Générer français
+    onProgress?.('Génération en français...');
+    const frGame = await generateGameForLanguage(gameNameInput, 'fr', API_KEY, MODEL, useDirectOpenAI);
+
+    // Petit délai pour éviter le rate limiting
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Générer anglais
+    onProgress?.('Génération en anglais...');
+    const enGame = await generateGameForLanguage(gameNameInput, 'en', API_KEY, MODEL, useDirectOpenAI);
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Générer espagnol
+    onProgress?.('Génération en espagnol...');
+    const esGame = await generateGameForLanguage(gameNameInput, 'es', API_KEY, MODEL, useDirectOpenAI);
+
+    onProgress?.('Finalisation...');
+
+    // Générer le slug à partir du nom français
+    const slug = generateSlug(frGame.name);
+
+    return {
+      name_fr: frGame.name,
+      name_en: enGame.name,
+      name_es: esGame.name,
+      slug,
+      description_fr: frGame.description,
+      description_en: enGame.description,
+      description_es: esGame.description,
+      instructions_fr: frGame.instructions,
+      instructions_en: enGame.instructions,
+      instructions_es: esGame.instructions,
+    };
+  } catch (error) {
+    console.error('Error generating game with AI:', error);
     throw error;
   }
 }

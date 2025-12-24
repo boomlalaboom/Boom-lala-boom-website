@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Music, Gamepad2, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase, Character, Song, Game } from '../lib/supabase';
 import { SongsSection } from './SongsSection';
@@ -72,11 +73,6 @@ export function HomePage() {
     }
   };
 
-  const getLocalizedText = (obj: Character | Song | Game, field: string) => {
-    const key = `${field}_${language}` as keyof typeof obj;
-    return (obj[key] as string) || (obj[`${field}_fr` as keyof typeof obj] as string) || '';
-  };
-
   if (loading) {
     return <LoadingState />;
   }
@@ -147,33 +143,40 @@ export function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-            {characters.slice(0, 3).map((character, index) => (
-              <div
-                key={character.id}
-                className="group relative bg-white rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer animate-slide-up"
-                style={{
-                  animationDelay: `${index * 100}ms`,
-                }}
-                onClick={() => {
-                  const element = document.getElementById('characters');
-                  element?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                <div className="absolute top-4 right-4">
-                  <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse" />
-                </div>
-                <h3 className="text-xl font-bold mb-2" style={{ color: character.color_primary }}>
-                  {getLocalizedText(character, 'name')}
-                </h3>
-                <p className="text-gray-600">
-                  {getLocalizedText(character, 'description').substring(0, 100)}...
-                </p>
-                <div className="mt-4 inline-block px-4 py-2 rounded-full text-white font-medium text-sm"
-                  style={{ backgroundColor: character.color_primary }}>
-                  {t('home_cta_discover')}
-                </div>
-              </div>
-            ))}
+            {characters.slice(0, 3).map((character, index) => {
+              const getLocalizedText = (field: string) => {
+                const key = `${field}_${language}` as keyof Character;
+                return (character[key] as string) || (character[`${field}_fr` as keyof Character] as string) || '';
+              };
+
+              return (
+                <Link
+                  key={character.slug}
+                  to={`/characters/${character.slug}`}
+                  className="group relative bg-white rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer animate-slide-up"
+                  style={{
+                    animationDelay: `${index * 100}ms`,
+                  }}
+                >
+                  <div className="absolute top-4 right-4">
+                    <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse" />
+                  </div>
+                  <div className="w-20 h-20 rounded-2xl bg-white shadow-md flex items-center justify-center mb-4 overflow-hidden">
+                    <img src={character.image_url} alt={getLocalizedText('name')} className="w-full h-full object-cover" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2" style={{ color: character.color_primary }}>
+                    {getLocalizedText('name')}
+                  </h3>
+                  <p className="text-gray-600">
+                    {getLocalizedText('description').substring(0, 100)}...
+                  </p>
+                  <div className="mt-4 inline-block px-4 py-2 rounded-full text-white font-medium text-sm"
+                    style={{ backgroundColor: character.color_primary }}>
+                    {t('home_cta_discover')}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>

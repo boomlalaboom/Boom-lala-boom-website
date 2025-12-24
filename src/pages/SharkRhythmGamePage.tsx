@@ -36,9 +36,9 @@ const BABY_SHARK_VIDEOS = {
 const ROUNDS: Instruction[] = [
   { sharks: ['baby'] }, // Round 1: attraper Baby Shark
   { sharks: ['papa'] }, // Round 2: attraper Papa Shark
-  { sharks: ['mama', 'grandma'] }, // Round 3: attraper 2 requins (ordre pas important)
-  { sharks: ['baby', 'papa'] }, // Round 4: attraper 2 requins différents
-  { sharks: ['baby', 'papa', 'mama'], order: true }, // Round 5: attraper 3 requins dans l'ordre
+  { sharks: ['mama'] }, // Round 3: attraper Mama Shark
+  { sharks: ['baby', 'papa'] }, // Round 4: attraper 2 requins
+  { sharks: ['baby', 'mama'] }, // Round 5: attraper 2 requins
 ];
 
 export function SharkRhythmGamePage() {
@@ -57,12 +57,13 @@ export function SharkRhythmGamePage() {
   const [roundComplete, setRoundComplete] = useState(false);
   const [netPosition, setNetPosition] = useState({ x: 0, y: 0 });
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(true);
 
   const currentInstruction = ROUNDS[round];
-  const baseSpeed = 1.5 + round * 0.5; // Vitesse augmente à chaque round
-  const fishCount = 3 + round; // Nombre de poissons augmente
+  const baseSpeed = 0.3 + round * 0.1; // Vitesse très lente
+  const fishCount = 2 + round; // Moins de poissons
 
-  // Fonction pour générer un poisson ou requin aléatoire
+  // Fonction pour générer un poisson ou requin aléatoire (qui tombe du haut)
   const generateFish = (): Fish => {
     const isShark = Math.random() < 0.4; // 40% de chance d'être un requin
     const sharkType = isShark
@@ -72,10 +73,10 @@ export function SharkRhythmGamePage() {
     return {
       id: Math.random().toString(36),
       type: sharkType,
-      x: -100,
-      y: Math.random() * 70 + 10, // Entre 10% et 80% de la hauteur
-      speed: baseSpeed * (0.8 + Math.random() * 0.4),
-      size: 80 + Math.random() * 40,
+      x: Math.random() * 80 + 10, // Position horizontale aléatoire entre 10% et 90%
+      y: -20, // Commence au-dessus de l'écran
+      speed: baseSpeed,
+      size: 120, // Taille fixe et grosse pour tous
     };
   };
 
@@ -90,10 +91,10 @@ export function SharkRhythmGamePage() {
       initialFishes.push({
         id: `required-${sharkType}-${index}`,
         type: sharkType,
-        x: -100 - index * 200,
-        y: Math.random() * 60 + 15,
+        x: 20 + index * 30, // Espacés horizontalement
+        y: -20 - index * 40, // Décalés verticalement pour tomber un par un
         speed: baseSpeed,
-        size: 100,
+        size: 120, // Taille fixe et grosse pour tous
       });
     });
 
@@ -107,7 +108,7 @@ export function SharkRhythmGamePage() {
     setRoundComplete(false);
   }, [round, gameStarted]);
 
-  // Animation des poissons
+  // Animation des poissons (tombent du haut vers le bas)
   useEffect(() => {
     if (!gameStarted) return;
 
@@ -116,9 +117,9 @@ export function SharkRhythmGamePage() {
         const updated = prevFishes
           .map((fish) => ({
             ...fish,
-            x: fish.x + fish.speed,
+            y: fish.y + fish.speed, // Mouvement vertical vers le bas
           }))
-          .filter((fish) => fish.x < 110); // Retirer les poissons hors écran
+          .filter((fish) => fish.y < 110); // Retirer les poissons hors écran (en bas)
 
         // Ajouter de nouveaux poissons aléatoirement
         if (Math.random() < 0.02 && updated.length < fishCount + 5) {
@@ -214,18 +215,12 @@ export function SharkRhythmGamePage() {
   };
 
   const handleFishClick = (fish: Fish) => {
-    // Vérifier si l'épuisette est proche du poisson (collision)
-    const distance = Math.sqrt(
-      Math.pow(netPosition.x - fish.x, 2) + Math.pow(netPosition.y - fish.y, 2)
-    );
-
-    if (distance < 15) {
-      // Distance suffisamment proche
-      catchFish(fish);
-    }
+    // Attraper directement le poisson cliqué (simplifié pour les enfants)
+    catchFish(fish);
   };
 
   const startGame = () => {
+    setShowTutorial(false);
     setGameStarted(true);
     setAudioStarted(true);
     setAudioOn(true);
@@ -292,23 +287,6 @@ export function SharkRhythmGamePage() {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#00B7FF] via-[#0080C8] to-[#004D7A] text-white overflow-hidden">
-      {/* Bulles décoratives */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-white/20 animate-float"
-            style={{
-              width: Math.random() * 30 + 10,
-              height: Math.random() * 30 + 10,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${Math.random() * 10 + 10}s`,
-            }}
-          />
-        ))}
-      </div>
 
       <div className="relative z-10 container mx-auto px-4 py-8">
         {/* En-tête */}
@@ -350,7 +328,85 @@ export function SharkRhythmGamePage() {
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr,0.8fr] gap-8">
           {/* Zone de jeu */}
           <div className="bg-white/10 border border-white/20 rounded-3xl overflow-hidden backdrop-blur-sm relative">
-            {!gameStarted ? (
+            {showTutorial && !gameStarted ? (
+              <div className="flex flex-col items-center justify-center h-[600px] p-8">
+                <h2 className="text-3xl font-black text-[#FFE600] mb-6">
+                  {language === 'fr'
+                    ? 'Comment jouer ?'
+                    : language === 'en'
+                    ? 'How to play?'
+                    : '¿Cómo jugar?'}
+                </h2>
+
+                {/* Démonstration visuelle */}
+                <div className="bg-gradient-to-b from-[#0080C8]/30 to-[#004D7A]/50 rounded-2xl p-6 mb-6 relative h-64 w-full max-w-md overflow-hidden"
+                  style={{
+                    backgroundImage: 'url(/images/ocean-background.png)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}>
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#0080C8]/20 to-[#004D7A]/30"></div>
+
+                  {/* Exemple de requin qui tombe */}
+                  <div className="absolute animate-float" style={{ left: '30%', top: '20%' }}>
+                    <div className="text-6xl">🦈</div>
+                  </div>
+
+                  {/* Filet avec la souris */}
+                  <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+                    <img src="/images/net.svg" alt="Net" className="w-24 h-24 animate-bounce" />
+                  </div>
+
+                  {/* Flèche indicative */}
+                  <div className="absolute top-12 left-1/2 transform -translate-x-1/2 text-[#FFE600] animate-pulse">
+                    <div className="text-4xl">↓</div>
+                  </div>
+                </div>
+
+                <div className="bg-white/10 rounded-xl p-4 mb-6 max-w-md">
+                  <ul className="space-y-2 text-left">
+                    <li className="flex items-start gap-2">
+                      <span className="text-2xl">🦈</span>
+                      <span className="text-white">
+                        {language === 'fr'
+                          ? 'Les poissons tombent du haut'
+                          : language === 'en'
+                          ? 'Fish fall from the top'
+                          : 'Los peces caen desde arriba'}
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-2xl">🖱️</span>
+                      <span className="text-white">
+                        {language === 'fr'
+                          ? 'Bouge ta souris pour déplacer le filet'
+                          : language === 'en'
+                          ? 'Move your mouse to move the net'
+                          : 'Mueve el ratón para mover la red'}
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-2xl">🎯</span>
+                      <span className="text-white">
+                        {language === 'fr'
+                          ? 'Clique pour attraper les bons requins !'
+                          : language === 'en'
+                          ? 'Click to catch the right sharks!'
+                          : '¡Haz clic para atrapar los tiburones correctos!'}
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+
+                <button
+                  onClick={startGame}
+                  className="flex items-center gap-3 bg-[#FFE600] text-[#0457BA] px-8 py-4 rounded-full font-black text-xl hover:bg-[#FF9F00] transition-all shadow-lg"
+                >
+                  <PlayCircle className="w-8 h-8" />
+                  {language === 'fr' ? 'Commencer' : language === 'en' ? 'Start' : 'Empezar'}
+                </button>
+              </div>
+            ) : !gameStarted ? (
               <div className="flex flex-col items-center justify-center h-[600px] p-8">
                 <h2 className="text-4xl font-black text-[#FFE600] mb-4">
                   {language === 'fr'
@@ -359,13 +415,6 @@ export function SharkRhythmGamePage() {
                     ? 'Ready to play?'
                     : '¿Listo para jugar?'}
                 </h2>
-                <p className="text-lg text-center max-w-md mb-8">
-                  {language === 'fr'
-                    ? 'Utilise ta souris pour contrôler l\'épuisette et attraper les bons requins !'
-                    : language === 'en'
-                    ? 'Use your mouse to control the net and catch the right sharks!'
-                    : '¡Usa tu ratón para controlar la red y atrapar los tiburones correctos!'}
-                </p>
                 <button
                   onClick={startGame}
                   className="flex items-center gap-3 bg-[#FFE600] text-[#0457BA] px-8 py-4 rounded-full font-black text-xl hover:bg-[#FF9F00] transition-all shadow-lg"
@@ -406,20 +455,30 @@ export function SharkRhythmGamePage() {
                 {/* Zone océan avec poissons */}
                 <div
                   ref={gameAreaRef}
-                  className="relative h-[500px] bg-gradient-to-b from-[#0080C8]/30 to-[#004D7A]/50 overflow-hidden cursor-none"
+                  className="relative h-[500px] overflow-hidden cursor-none"
+                  style={{
+                    backgroundImage: 'url(/images/ocean-background.png)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
+                  }}
                 >
+                  {/* Overlay léger pour améliorer la lisibilité */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#0080C8]/20 to-[#004D7A]/30 pointer-events-none"></div>
+
                   {/* Poissons et requins */}
                   {fishes.map((fish) => (
                     <button
                       key={fish.id}
                       onClick={() => handleFishClick(fish)}
-                      className="absolute transition-none"
+                      className="absolute transition-none cursor-pointer hover:scale-110"
                       style={{
                         left: `${fish.x}%`,
                         top: `${fish.y}%`,
-                        width: fish.size,
-                        height: fish.size * 0.6,
+                        width: fish.size + 20,
+                        height: fish.size * 0.6 + 20,
                         transform: 'translate(-50%, -50%)',
+                        padding: '10px',
                       }}
                     >
                       <img
@@ -429,7 +488,7 @@ export function SharkRhythmGamePage() {
                             : `/images/sharks/${fish.type}-shark.png`
                         }
                         alt={fish.type}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-contain pointer-events-none"
                         onError={(e) => {
                           // Placeholder si l'image n'existe pas encore
                           e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 60"%3E%3Ctext x="50" y="30" text-anchor="middle" font-size="30"%3E🐟%3C/text%3E%3C/svg%3E';
@@ -447,12 +506,13 @@ export function SharkRhythmGamePage() {
                       transform: 'translate(-50%, -50%)',
                     }}
                   >
-                    <div className="relative w-24 h-24">
-                      <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full opacity-30 animate-ping" />
-                      <div className="absolute inset-2 bg-yellow-400/50 rounded-full border-4 border-yellow-500" />
-                      <div className="absolute inset-4 text-4xl flex items-center justify-center">
-                        🥅
-                      </div>
+                    <div className="relative w-32 h-32">
+                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-300 to-blue-400 rounded-full opacity-20 animate-ping" />
+                      <img
+                        src="/images/net.svg"
+                        alt="Fishing net"
+                        className="w-full h-full drop-shadow-lg"
+                      />
                     </div>
                   </div>
 

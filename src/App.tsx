@@ -7,6 +7,7 @@ import { AboutPage } from './pages/AboutPage';
 import { SongsPage } from './pages/SongsPage';
 import { GamesPage } from './pages/GamesPage';
 import { CharactersPage } from './pages/CharactersPage';
+import { CharacterDetailPage } from './pages/CharacterDetailPage';
 import { ActivitiesPage } from './pages/ActivitiesPage';
 import { LearningPage } from './pages/LearningPage';
 import { ResourcesPage } from './pages/ResourcesPage';
@@ -36,6 +37,7 @@ function App() {
               <Route path="/games/lola-memory" element={<LolaMemoryPage />} />
               <Route path="/games/shark-rhythm" element={<SharkRhythmGamePage />} />
               <Route path="/characters" element={<CharactersPage />} />
+              <Route path="/characters/:slug" element={<CharacterDetailPage />} />
               <Route path="/activities" element={<ActivitiesPage />} />
               <Route path="/learning" element={<LearningPage />} />
               <Route path="/resources" element={<ResourcesPage />} />
