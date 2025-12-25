@@ -7,13 +7,16 @@ interface SeoHeadProps {
   description?: string;
   image?: string;
   jsonLd?: Record<string, unknown>;
+  alternates?: { hreflang: string; href: string }[];
 }
 
-export function SeoHead({ title: overrideTitle, description: overrideDescription, image, jsonLd }: SeoHeadProps) {
+export function SeoHead({ title: overrideTitle, description: overrideDescription, image, jsonLd, alternates }: SeoHeadProps) {
   const { t } = useLanguage();
   const location = useLocation();
 
   useEffect(() => {
+    const envSiteUrl = import.meta.env.VITE_SITE_URL as string | undefined;
+    const baseUrl = (envSiteUrl || window.location.origin).replace(/\/$/, '');
     const pageMeta: Record<string, { title: string; description: string }> = {
       '/about': { title: t('about_page_title'), description: t('about_page_subtitle') },
       '/songs': { title: t('songs_page_title'), description: t('songs_page_subtitle') },
@@ -30,9 +33,8 @@ export function SeoHead({ title: overrideTitle, description: overrideDescription
     const meta = pageMeta[location.pathname];
     const title = overrideTitle || (meta ? `${t('meta_title')} - ${meta.title}` : t('meta_title'));
     const description = overrideDescription || (meta ? meta.description : t('meta_description'));
-    const siteUrl = window.location.origin;
-    const canonicalUrl = `${siteUrl}${location.pathname}`;
-    const imageUrl = image || `${siteUrl}/logo_boomlalaboom.png`;
+    const canonicalUrl = `${baseUrl}${location.pathname}${location.search || ''}`;
+    const imageUrl = image || `${baseUrl}/logo_boomlalaboom.png`;
 
     document.title = title;
 
@@ -88,6 +90,16 @@ export function SeoHead({ title: overrideTitle, description: overrideDescription
       ogUrl.setAttribute('content', canonicalUrl);
     }
 
+    const ogSiteName = ensureMeta('meta[property="og:site_name"]', { property: 'og:site_name' });
+    if (ogSiteName) {
+      ogSiteName.setAttribute('content', 'BoomLaLaBoom');
+    }
+
+    const twitterCard = ensureMeta('meta[name="twitter:card"]', { name: 'twitter:card' });
+    if (twitterCard) {
+      twitterCard.setAttribute('content', 'summary_large_image');
+    }
+
     let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (!canonical) {
       canonical = document.createElement('link');
@@ -96,11 +108,29 @@ export function SeoHead({ title: overrideTitle, description: overrideDescription
     }
     canonical.setAttribute('href', canonicalUrl);
 
+    const defaultAlternates = [
+      { hreflang: 'fr', href: `${baseUrl}${location.pathname}?lang=fr` },
+      { hreflang: 'en', href: `${baseUrl}${location.pathname}?lang=en` },
+      { hreflang: 'es', href: `${baseUrl}${location.pathname}?lang=es` },
+      { hreflang: 'x-default', href: `${baseUrl}${location.pathname}` },
+    ];
+
+    const alternatesToApply = alternates && alternates.length ? alternates : defaultAlternates;
+    document.querySelectorAll('link[rel="alternate"][data-seo="alternate"]').forEach((node) => node.remove());
+    alternatesToApply.forEach((alternate) => {
+      const link = document.createElement('link');
+      link.setAttribute('rel', 'alternate');
+      link.setAttribute('hreflang', alternate.hreflang);
+      link.setAttribute('href', alternate.href);
+      link.setAttribute('data-seo', 'alternate');
+      document.head.appendChild(link);
+    });
+
     const defaultJsonLd = {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
       name: 'BoomLaLaBoom',
-      url: siteUrl,
+      url: baseUrl,
       description,
     };
 
@@ -113,7 +143,7 @@ export function SeoHead({ title: overrideTitle, description: overrideDescription
       document.head.appendChild(script);
     }
     script.textContent = JSON.stringify(payload);
-  }, [location.pathname, t, overrideTitle, overrideDescription, image, jsonLd]);
+  }, [location.pathname, location.search, t, overrideTitle, overrideDescription, image, jsonLd, alternates]);
 
   return null;
 }

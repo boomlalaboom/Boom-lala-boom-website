@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export type Language = 'fr' | 'en' | 'es';
 
@@ -176,7 +177,13 @@ const translations = {
 };
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
+  const location = useLocation();
   const [language, setLanguageState] = useState<Language>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const queryLang = params.get('lang');
+    if (queryLang && ['fr', 'en', 'es'].includes(queryLang)) {
+      return queryLang as Language;
+    }
     const saved = localStorage.getItem('boomlalaboom_language');
     if (saved && ['fr', 'en', 'es'].includes(saved)) {
       return saved as Language;
@@ -192,6 +199,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('boomlalaboom_language', language);
     document.documentElement.lang = language;
   }, [language]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const queryLang = params.get('lang');
+    if (queryLang && ['fr', 'en', 'es'].includes(queryLang) && queryLang !== language) {
+      setLanguageState(queryLang as Language);
+    }
+  }, [language, location.search]);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);

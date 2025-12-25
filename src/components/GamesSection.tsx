@@ -51,12 +51,24 @@ export function GamesSection({
     }
   };
 
+  const getSlugs = (game: Game) => {
+    return [
+      game.slug_fr,
+      game.slug_en,
+      game.slug_es,
+    ].filter(Boolean).map((value) => value.toLowerCase());
+  };
+
   const isLolaMemory = (game: Game) => {
-    return game.slug === 'lola-memory' || (game.game_type === 'memory' && /lola/i.test(game.slug));
+    const slugs = getSlugs(game);
+    return slugs.includes('lola-memory') || (game.game_type === 'memory' && slugs.some((slug) => /lola/i.test(slug)));
   };
 
   const isSharkRhythm = (game: Game) => {
-    return game.slug === 'shark-rhythm' || game.slug === 'rythme-requin' || (game.game_type === 'rhythm' && /shark|requin/i.test(game.slug));
+    const slugs = getSlugs(game);
+    return slugs.includes('shark-rhythm')
+      || slugs.includes('rythme-requin')
+      || (game.game_type === 'rhythm' && slugs.some((slug) => /shark|requin/i.test(slug)));
   };
 
   return (

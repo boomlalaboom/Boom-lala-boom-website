@@ -22,6 +22,7 @@ export function ArticlePage() {
   const [toc, setToc] = useState<TocItem[]>([]);
   const [activeSection, setActiveSection] = useState<string>('');
   const contentRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
     if (slug) {
@@ -30,25 +31,36 @@ export function ArticlePage() {
   }, [slug, language]);
 
   useEffect(() => {
-    if (article && contentRef.current) {
+    if (!article) return;
+    const rafId = window.requestAnimationFrame(() => {
       extractTableOfContents();
       setupScrollSpy();
-    }
-  }, [article, contentRef.current]);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
+    };
+  }, [article]);
 
   const extractTableOfContents = () => {
     if (!contentRef.current) return;
 
-    const headings = contentRef.current.querySelectorAll('h2, h3');
+    const headings = contentRef.current.querySelectorAll('h2, h3, h4');
     const tocItems: TocItem[] = [];
 
     headings.forEach((heading, index) => {
-      const id = `section-${index}`;
-      heading.id = id;
+      const existingId = heading.id;
+      const text = heading.textContent || '';
+      const id = existingId || `section-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${index}`;
+      if (!existingId) heading.id = id;
       tocItems.push({
         id,
-        text: heading.textContent || '',
-        level: parseInt(heading.tagName.charAt(1))
+        text,
+        level: parseInt(heading.tagName.charAt(1), 10),
       });
     });
 
@@ -56,6 +68,9 @@ export function ArticlePage() {
   };
 
   const setupScrollSpy = () => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -70,11 +85,11 @@ export function ArticlePage() {
     );
 
     if (contentRef.current) {
-      const headings = contentRef.current.querySelectorAll('h2, h3');
+      const headings = contentRef.current.querySelectorAll('h2, h3, h4');
       headings.forEach((heading) => observer.observe(heading));
     }
 
-    return () => observer.disconnect();
+    observerRef.current = observer;
   };
 
   const scrollToSection = (id: string) => {
@@ -164,6 +179,21 @@ export function ArticlePage() {
   const metaTitle = getLocalizedField(article, 'meta_title') || title;
   const metaDescription = getLocalizedField(article, 'meta_description') || getLocalizedField(article, 'excerpt');
   const imageUrl = article.thumbnail_url || '/logo_boomlalaboom.png';
+  const baseUrl = ((import.meta.env.VITE_SITE_URL as string | undefined) || window.location.origin).replace(/\/$/, '');
+  const alternates: { hreflang: string; href: string }[] = [];
+
+  if (article.slug_fr) {
+    alternates.push({ hreflang: 'fr', href: `${baseUrl}/blog/${article.slug_fr}?lang=fr` });
+  }
+  if (article.slug_en) {
+    alternates.push({ hreflang: 'en', href: `${baseUrl}/blog/${article.slug_en}?lang=en` });
+  }
+  if (article.slug_es) {
+    alternates.push({ hreflang: 'es', href: `${baseUrl}/blog/${article.slug_es}?lang=es` });
+  }
+  if (article.slug_fr) {
+    alternates.push({ hreflang: 'x-default', href: `${baseUrl}/blog/${article.slug_fr}` });
+  }
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -180,17 +210,17 @@ export function ArticlePage() {
       name: 'BoomLaLaBoom',
       logo: {
         '@type': 'ImageObject',
-        url: `${window.location.origin}/logo_boomlalaboom.png`,
+        url: `${baseUrl}/logo_boomlalaboom.png`,
       },
     },
     datePublished: article.published_at,
     dateModified: article.updated_at || article.published_at,
-    mainEntityOfPage: `${window.location.origin}/blog/${getSlug(article)}`,
+    mainEntityOfPage: `${baseUrl}/blog/${getSlug(article)}`,
   };
 
   return (
     <>
-      <SeoHead title={metaTitle} description={metaDescription} image={imageUrl} jsonLd={jsonLd} />
+      <SeoHead title={metaTitle} description={metaDescription} image={imageUrl} jsonLd={jsonLd} alternates={alternates} />
 
       <article className="py-8 px-4 bg-gradient-to-b from-[var(--accent-yellow)] to-[var(--accent-orange)]">
         {/* Back button */}
