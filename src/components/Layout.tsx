@@ -299,7 +299,7 @@ export function Layout({ children }: LayoutProps) {
                 <CloseIcon className="w-5 h-5 text-gray-600" />
               </button>
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 overflow-y-auto pr-1" style={{ maxHeight: 'calc(100vh - 140px)' }}>
               {[...primaryNavItems, ...secondaryNavItems].map((item) => {
                 const Icon = item.icon;
                 return (
