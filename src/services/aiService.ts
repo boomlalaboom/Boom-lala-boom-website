@@ -55,7 +55,9 @@ export interface GeneratedGame {
   name_fr: string;
   name_en: string;
   name_es: string;
-  slug: string;
+  slug_fr: string;
+  slug_en: string;
+  slug_es: string;
   description_fr: string;
   description_en: string;
   description_es: string;
@@ -74,7 +76,9 @@ export interface GeneratedCharacter {
   name_fr: string;
   name_en: string;
   name_es: string;
-  slug: string;
+  slug_fr: string;
+  slug_en: string;
+  slug_es: string;
   description_fr: string;
   description_en: string;
   description_es: string;
@@ -360,14 +364,18 @@ export async function generateGameWithAI(
 
     onProgress?.('Finalisation...');
 
-    // Générer le slug à partir du nom français
-    const slug = generateSlug(frGame.name);
+    // Générer les slugs
+    const slug_fr = generateSlug(frGame.name);
+    const slug_en = generateSlug(enGame.name);
+    const slug_es = generateSlug(esGame.name);
 
     return {
       name_fr: frGame.name,
       name_en: enGame.name,
       name_es: esGame.name,
-      slug,
+      slug_fr,
+      slug_en,
+      slug_es,
       description_fr: frGame.description,
       description_en: enGame.description,
       description_es: esGame.description,
@@ -386,7 +394,6 @@ export async function generateGameWithAI(
  */
 export async function generateArticleWithAI(
   titleInput: string,
-  targetAudience: string = 'parents et enfants de 2 à 8 ans',
   onProgress?: (message: string) => void
 ): Promise<GeneratedArticle> {
   // Récupérer la configuration
@@ -606,13 +613,18 @@ export async function generateCharacterWithAI(
 
     onProgress?.('Finalisation...');
 
-    const slug = generateSlug(frCharacter.name);
+    // Générer les slugs
+    const slug_fr = generateSlug(frCharacter.name);
+    const slug_en = generateSlug(enCharacter.name);
+    const slug_es = generateSlug(esCharacter.name);
 
     return {
       name_fr: frCharacter.name,
       name_en: enCharacter.name,
       name_es: esCharacter.name,
-      slug,
+      slug_fr,
+      slug_en,
+      slug_es,
       description_fr: frCharacter.description,
       description_en: enCharacter.description,
       description_es: esCharacter.description,

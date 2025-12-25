@@ -16,17 +16,35 @@ export function CharacterDetailPage() {
     const loadCharacter = async () => {
       if (!slug) return;
       setLoading(true);
-      const { data } = await supabase
+      const decodedSlug = decodeURIComponent(slug);
+      const slugKey = `slug_${language}` as keyof Character;
+      const { data, error } = await supabase
         .from('characters')
         .select('*')
-        .eq('slug', slug)
-        .single();
-      setCharacter(data || null);
+        .eq(slugKey, decodedSlug);
+
+      if (!error && data && data.length) {
+        setCharacter(data[0]);
+      } else {
+        const { data: fallbackData } = await supabase
+          .from('characters')
+          .select('*')
+          .or(`slug_fr.eq.${decodedSlug},slug_en.eq.${decodedSlug},slug_es.eq.${decodedSlug}`);
+        if (fallbackData && fallbackData.length) {
+          setCharacter(fallbackData[0]);
+        } else {
+          const { data: ilikeData } = await supabase
+            .from('characters')
+            .select('*')
+            .or(`slug_fr.ilike.${decodedSlug},slug_en.ilike.${decodedSlug},slug_es.ilike.${decodedSlug}`);
+          setCharacter(ilikeData && ilikeData.length ? ilikeData[0] : null);
+        }
+      }
       setLoading(false);
     };
 
     loadCharacter();
-  }, [slug]);
+  }, [language, slug]);
 
   const labels = useMemo(() => {
     if (language === 'en') {
@@ -119,8 +137,8 @@ export function CharacterDetailPage() {
                   {language === 'fr'
                     ? 'Son univers'
                     : language === 'en'
-                    ? 'Their universe'
-                    : 'Su universo'}
+                      ? 'Their universe'
+                      : 'Su universo'}
                 </h3>
                 <p className="text-gray-700 leading-relaxed">{universe}</p>
               </div>
@@ -152,8 +170,8 @@ export function CharacterDetailPage() {
                       {language === 'fr'
                         ? 'Aucune video disponible'
                         : language === 'en'
-                        ? 'No video available'
-                        : 'No hay video disponible'}
+                          ? 'No video available'
+                          : 'No hay video disponible'}
                     </div>
                   )}
                 </div>
@@ -161,8 +179,8 @@ export function CharacterDetailPage() {
                   {language === 'fr'
                     ? 'La video se lance automatiquement en muet.'
                     : language === 'en'
-                    ? 'The video starts automatically muted.'
-                    : 'El video se inicia automaticamente en silencio.'}
+                      ? 'The video starts automatically muted.'
+                      : 'El video se inicia automaticamente en silencio.'}
                 </p>
               </div>
 
@@ -174,8 +192,8 @@ export function CharacterDetailPage() {
                       {language === 'fr'
                         ? 'Imprime et colorie ton personnage.'
                         : language === 'en'
-                        ? 'Print and color your character.'
-                        : 'Imprime y colorea tu personaje.'}
+                          ? 'Print and color your character.'
+                          : 'Imprime y colorea tu personaje.'}
                     </p>
                   </div>
                   <a

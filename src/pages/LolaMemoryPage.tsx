@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Sparkles, Volume2, VolumeX, RotateCcw, ArrowRight, PlayCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useLocation } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 type Card = {
   id: string;
@@ -29,6 +31,29 @@ export function LolaMemoryPage() {
   const [checking, setChecking] = useState(false);
   const [audioOn, setAudioOn] = useState(false);
   const [audioStarted, setAudioStarted] = useState(false);
+  const [customVideoId, setCustomVideoId] = useState<string | null>(null);
+
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const songId = searchParams.get('songId');
+
+  useEffect(() => {
+    if (songId) {
+      const fetchSong = async () => {
+        const { data, error } = await supabase
+          .from('songs')
+          .select(`youtube_id_${language}`)
+          .eq('id', songId)
+          .single();
+
+        if (data && !error) {
+          const vid = data[`youtube_id_${language}` as keyof typeof data];
+          if (vid) setCustomVideoId(vid);
+        }
+      };
+      fetchSong();
+    }
+  }, [songId, language]);
 
   const pairsCount = LEVELS[levelIndex] / 2;
 
@@ -115,8 +140,8 @@ export function LolaMemoryPage() {
               {language === 'fr'
                 ? 'Écoute Lola la vache et entraîne ta mémoire. Plus tu avances, plus le jeu devient difficile.'
                 : language === 'en'
-                ? 'Listen to Lola the cow and train your memory. Each level gets a little harder.'
-                : 'Escucha a la vaca Lola y entrena tu memoria. Cada nivel es un poco más difícil.'}
+                  ? 'Listen to Lola the cow and train your memory. Each level gets a little harder.'
+                  : 'Escucha a la vaca Lola y entrena tu memoria. Cada nivel es un poco más difícil.'}
             </p>
           </div>
 
@@ -150,36 +175,35 @@ export function LolaMemoryPage() {
               <div className="flex items-center gap-3">
                 <span className="text-sm uppercase tracking-wide text-white/70">
                   {language === 'fr' ? 'Niveau' : language === 'en' ? 'Level' : 'Nivel'}
-              </span>
-              <span className="text-2xl font-black text-[#FFE600]">
-                {levelIndex + 1}
-              </span>
-              <span className="text-white/70">
-                {language === 'fr' ? `${LEVELS[levelIndex]} cartes` : language === 'en' ? `${LEVELS[levelIndex]} cards` : `${LEVELS[levelIndex]} cartas`}
-              </span>
-            </div>
-            <div className="flex items-center gap-6 text-sm">
-              <div>
-                <span className="text-white/70">{language === 'fr' ? 'Coups' : language === 'en' ? 'Moves' : 'Movimientos'}</span>
-                <div className="text-xl font-bold text-white">{moves}</div>
+                </span>
+                <span className="text-2xl font-black text-[#FFE600]">
+                  {levelIndex + 1}
+                </span>
+                <span className="text-white/70">
+                  {language === 'fr' ? `${LEVELS[levelIndex]} cartes` : language === 'en' ? `${LEVELS[levelIndex]} cards` : `${LEVELS[levelIndex]} cartas`}
+                </span>
               </div>
-              <div>
-                <span className="text-white/70">{language === 'fr' ? 'Paires' : language === 'en' ? 'Pairs' : 'Parejas'}</span>
-                <div className="text-xl font-bold text-white">{totalPairsFound}/{totalPairs}</div>
+              <div className="flex items-center gap-6 text-sm">
+                <div>
+                  <span className="text-white/70">{language === 'fr' ? 'Coups' : language === 'en' ? 'Moves' : 'Movimientos'}</span>
+                  <div className="text-xl font-bold text-white">{moves}</div>
+                </div>
+                <div>
+                  <span className="text-white/70">{language === 'fr' ? 'Paires' : language === 'en' ? 'Pairs' : 'Parejas'}</span>
+                  <div className="text-xl font-bold text-white">{totalPairsFound}/{totalPairs}</div>
+                </div>
               </div>
             </div>
-          </div>
 
             <div className="flex flex-wrap justify-center gap-4 sm:gap-5 max-w-5xl mx-auto">
               {deck.map((card) => (
                 <button
                   key={card.id}
                   onClick={() => handleFlip(card.id)}
-                  className={`relative w-24 h-32 sm:w-28 sm:h-40 md:w-36 md:h-52 rounded-2xl transition-all duration-300 shadow-lg ${
-                    isFlipped(card.id)
-                      ? 'bg-white scale-105'
-                      : 'bg-gradient-to-br from-[#FFE600] to-[#FF9F00] hover:scale-105'
-                  }`}
+                  className={`relative w-24 h-32 sm:w-28 sm:h-40 md:w-36 md:h-52 rounded-2xl transition-all duration-300 shadow-lg ${isFlipped(card.id)
+                    ? 'bg-white scale-105'
+                    : 'bg-gradient-to-br from-[#FFE600] to-[#FF9F00] hover:scale-105'
+                    }`}
                 >
                   <span className="absolute inset-0 flex items-center justify-center rounded-2xl overflow-hidden">
                     {isFlipped(card.id) ? (
@@ -206,8 +230,8 @@ export function LolaMemoryPage() {
                   {language === 'fr'
                     ? 'Prêt pour le niveau suivant ?'
                     : language === 'en'
-                    ? 'Ready for the next level?'
-                    : '¿Listo para el siguiente nivel?'}
+                      ? 'Ready for the next level?'
+                      : '¿Listo para el siguiente nivel?'}
                 </p>
                 <div className="mt-4 flex flex-wrap justify-center gap-4">
                   {levelIndex < LEVELS.length - 1 ? (
@@ -240,7 +264,7 @@ export function LolaMemoryPage() {
               <iframe
                 key={audioOn ? 'sound-on' : 'sound-off'}
                 title="Lola la vache"
-                src={`https://www.youtube.com/embed/${LOLA_VIDEO_ID}?autoplay=${audioStarted ? 1 : 0}&loop=1&playlist=${LOLA_VIDEO_ID}&controls=0&modestbranding=1&rel=0&mute=${audioOn ? 0 : 1}`}
+                src={`https://www.youtube.com/embed/${customVideoId || LOLA_VIDEO_ID}?autoplay=${audioStarted ? 1 : 0}&loop=1&playlist=${customVideoId || LOLA_VIDEO_ID}&controls=0&modestbranding=1&rel=0&mute=${audioOn ? 0 : 1}`}
                 className="w-full aspect-video"
                 allow="autoplay"
               />
@@ -249,8 +273,8 @@ export function LolaMemoryPage() {
               {language === 'fr'
                 ? 'La vidéo se lance automatiquement. Active le son si besoin.'
                 : language === 'en'
-                ? 'The video starts automatically. Turn on the sound if needed.'
-                : 'El video se inicia automáticamente. Activa el sonido si lo necesitas.'}
+                  ? 'The video starts automatically. Turn on the sound if needed.'
+                  : 'El video se inicia automáticamente. Activa el sonido si lo necesitas.'}
             </p>
           </div>
         </div>

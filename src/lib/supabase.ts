@@ -11,7 +11,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export interface Character {
   id: string;
-  slug: string;
+  slug_fr: string;
+  slug_en: string;
+  slug_es: string;
   name_fr: string;
   name_en: string;
   name_es: string;
@@ -34,7 +36,9 @@ export interface Character {
 export interface Song {
   id: string;
   character_id: string;
-  slug: string;
+  slug_fr: string;
+  slug_en: string;
+  slug_es: string;
   title_fr: string;
   title_en: string;
   title_es: string;
@@ -61,8 +65,12 @@ export interface Song {
 export interface Game {
   id: string;
   character_id: string;
-  song_id: string;
-  slug: string;
+  song_id_fr?: string;
+  song_id_en?: string;
+  song_id_es?: string;
+  slug_fr: string;
+  slug_en: string;
+  slug_es: string;
   name_fr: string;
   name_en: string;
   name_es: string;
@@ -84,7 +92,9 @@ export interface Game {
 export interface Activity {
   id: string;
   character_id: string;
-  slug: string;
+  slug_fr: string;
+  slug_en: string;
+  slug_es: string;
   title_fr: string;
   title_en: string;
   title_es: string;

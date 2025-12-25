@@ -108,7 +108,7 @@ export function Layout({ children }: LayoutProps) {
       )}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-sm shadow-md">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-[auto,1fr,auto] items-center gap-3 sm:gap-6 h-20">
+          <div className="flex items-center justify-between h-20 md:grid md:grid-cols-[auto,1fr,auto] md:gap-6">
             <Link
               to="/"
               className="hover:scale-105 transition-transform sm:-translate-x-[60px]"
@@ -181,23 +181,25 @@ export function Layout({ children }: LayoutProps) {
               </div>
             </nav>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              {/* Burger menu - visible uniquement sur mobile, positionné en premier à droite */}
               <button
                 type="button"
                 onClick={() => setShowMobileMenu(true)}
-                className="md:hidden p-2 rounded-full bg-white shadow-sm border border-[rgba(4,87,186,0.15)]"
+                className="md:hidden p-3 rounded-full bg-gradient-to-r from-[rgba(255,123,172,0.15)] to-[rgba(255,147,30,0.15)] hover:from-[rgba(255,123,172,0.25)] hover:to-[rgba(255,147,30,0.25)] shadow-md active:scale-95 transition-all order-2"
                 aria-label="Open menu"
               >
                 <Menu className="w-6 h-6 text-[var(--brand-blue)]" />
               </button>
 
-              <div className="relative">
+              {/* Sélecteur de langue */}
+              <div className="relative order-1 md:order-none">
                 <button
                   onClick={() => setShowLangMenu(!showLangMenu)}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-[rgba(63,169,245,0.2)] to-[rgba(255,123,172,0.2)] hover:from-[rgba(63,169,245,0.3)] hover:to-[rgba(255,123,172,0.3)] transition-all"
+                  className="flex items-center space-x-2 px-3 py-2 sm:px-4 rounded-full bg-gradient-to-r from-[rgba(63,169,245,0.2)] to-[rgba(255,123,172,0.2)] hover:from-[rgba(63,169,245,0.3)] hover:to-[rgba(255,123,172,0.3)] transition-all"
                 >
-                  <Globe className="w-5 h-5 text-[var(--brand-blue)]" />
-                  <span className="font-medium text-[var(--brand-blue)] uppercase">
+                  <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--brand-blue)]" />
+                  <span className="font-medium text-[var(--brand-blue)] uppercase text-sm sm:text-base">
                     {language}
                   </span>
                 </button>

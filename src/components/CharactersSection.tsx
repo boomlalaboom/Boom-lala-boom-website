@@ -27,7 +27,8 @@ export function CharactersSection({
 
   // Utiliser uniquement les données de Supabase
   const displayCharacters = characters.map((character) => ({
-    slug: character.slug,
+    id: character.id,
+    slug: (character[`slug_${language}` as keyof Character] as string) || character.slug_fr,
     name: getLocalizedText(character, 'name'),
     description: getLocalizedText(character, 'description'),
     imageUrl: character.image_url,
@@ -56,7 +57,7 @@ export function CharactersSection({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {displayCharacters.map((character, index) => (
             <div
-              key={character.slug}
+              key={character.id}
               className="group relative bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 animate-slide-up"
               style={{
                 animationDelay: `${index * 100}ms`,

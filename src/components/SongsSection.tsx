@@ -1,5 +1,5 @@
 import { Music, Play, ArrowRight, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Song } from '../lib/supabase';
 import { useState } from 'react';
@@ -10,6 +10,9 @@ interface SongsSectionProps {
   showViewMore?: boolean;
   viewMoreTo?: string;
   variant?: 'blue' | 'yellow';
+  watchMode?: 'page' | 'modal';
+  watchPagePath?: string;
+  viewMoreLabel?: string;
 }
 
 export function SongsSection({
@@ -18,9 +21,13 @@ export function SongsSection({
   showViewMore = false,
   viewMoreTo = '/songs',
   variant = 'blue',
+  watchMode = 'page',
+  watchPagePath = '/songs',
+  viewMoreLabel,
 }: SongsSectionProps) {
   const { language, t } = useLanguage();
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const getLocalizedField = (obj: Song, field: string) => {
     const key = `${field}_${language}` as keyof Song;
@@ -33,7 +40,12 @@ export function SongsSection({
   };
 
   const openYouTube = (youtubeId: string) => {
-    setActiveVideo(youtubeId);
+    if (!youtubeId) return;
+    if (watchMode === 'modal') {
+      setActiveVideo(youtubeId);
+      return;
+    }
+    navigate(`${watchPagePath}?video=${youtubeId}`);
   };
 
   return (
@@ -160,7 +172,7 @@ export function SongsSection({
         {showViewMore && (
           <div className="text-center mt-8">
             <Link to={viewMoreTo} className="inline-flex items-center gap-2 px-8 py-4 btn-primary text-lg">
-              <span>{t('view_more')}</span>
+              <span>{viewMoreLabel || t('view_more')}</span>
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>

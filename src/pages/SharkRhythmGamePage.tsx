@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { Volume2, VolumeX, RotateCcw, PlayCircle, Sparkles } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useLocation } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 type SharkType = 'baby' | 'papa' | 'mama' | 'grandma' | 'grandpa';
 
@@ -58,6 +60,29 @@ export function SharkRhythmGamePage() {
   const [netPosition, setNetPosition] = useState({ x: 0, y: 0 });
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [showTutorial, setShowTutorial] = useState(true);
+  const [customVideoId, setCustomVideoId] = useState<string | null>(null);
+
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const songId = searchParams.get('songId');
+
+  useEffect(() => {
+    if (songId) {
+      const fetchSong = async () => {
+        const { data, error } = await supabase
+          .from('songs')
+          .select(`youtube_id_${language}`)
+          .eq('id', songId)
+          .single();
+
+        if (data && !error) {
+          const vid = data[`youtube_id_${language}` as keyof typeof data];
+          if (vid) setCustomVideoId(vid);
+        }
+      };
+      fetchSong();
+    }
+  }, [songId, language]);
 
   const currentInstruction = ROUNDS[round];
   const baseSpeed = 0.3 + round * 0.1; // Vitesse très lente
@@ -263,8 +288,8 @@ export function SharkRhythmGamePage() {
       return language === 'fr'
         ? `Attrape ${sharkName} !`
         : language === 'en'
-        ? `Catch ${sharkName}!`
-        : `¡Atrapa ${sharkName}!`;
+          ? `Catch ${sharkName}!`
+          : `¡Atrapa ${sharkName}!`;
     } else if (instruction.order) {
       const names = instruction.sharks.map(
         (s) => SHARKS.find((shark) => shark.type === s)?.name[lang]
@@ -272,18 +297,18 @@ export function SharkRhythmGamePage() {
       return language === 'fr'
         ? `Attrape dans l'ordre : ${names.join(', ')}`
         : language === 'en'
-        ? `Catch in order: ${names.join(', ')}`
-        : `Atrapa en orden: ${names.join(', ')}`;
+          ? `Catch in order: ${names.join(', ')}`
+          : `Atrapa en orden: ${names.join(', ')}`;
     } else {
       return language === 'fr'
         ? `Attrape ${instruction.sharks.length} requins !`
         : language === 'en'
-        ? `Catch ${instruction.sharks.length} sharks!`
-        : `¡Atrapa ${instruction.sharks.length} tiburones!`;
+          ? `Catch ${instruction.sharks.length} sharks!`
+          : `¡Atrapa ${instruction.sharks.length} tiburones!`;
     }
   };
 
-  const videoId = BABY_SHARK_VIDEOS[language as keyof typeof BABY_SHARK_VIDEOS] || BABY_SHARK_VIDEOS.fr;
+  const videoId = customVideoId || BABY_SHARK_VIDEOS[language as keyof typeof BABY_SHARK_VIDEOS] || BABY_SHARK_VIDEOS.fr;
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#00B7FF] via-[#0080C8] to-[#004D7A] text-white overflow-hidden">
@@ -300,8 +325,8 @@ export function SharkRhythmGamePage() {
               {language === 'fr'
                 ? 'Attrape les requins !'
                 : language === 'en'
-                ? 'Catch the sharks!'
-                : '¡Atrapa los tiburones!'}
+                  ? 'Catch the sharks!'
+                  : '¡Atrapa los tiburones!'}
             </h1>
           </div>
 
@@ -334,8 +359,8 @@ export function SharkRhythmGamePage() {
                   {language === 'fr'
                     ? 'Comment jouer ?'
                     : language === 'en'
-                    ? 'How to play?'
-                    : '¿Cómo jugar?'}
+                      ? 'How to play?'
+                      : '¿Cómo jugar?'}
                 </h2>
 
                 {/* Démonstration visuelle */}
@@ -371,8 +396,8 @@ export function SharkRhythmGamePage() {
                         {language === 'fr'
                           ? 'Les poissons tombent du haut'
                           : language === 'en'
-                          ? 'Fish fall from the top'
-                          : 'Los peces caen desde arriba'}
+                            ? 'Fish fall from the top'
+                            : 'Los peces caen desde arriba'}
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
@@ -381,8 +406,8 @@ export function SharkRhythmGamePage() {
                         {language === 'fr'
                           ? 'Bouge ta souris pour déplacer le filet'
                           : language === 'en'
-                          ? 'Move your mouse to move the net'
-                          : 'Mueve el ratón para mover la red'}
+                            ? 'Move your mouse to move the net'
+                            : 'Mueve el ratón para mover la red'}
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
@@ -391,8 +416,8 @@ export function SharkRhythmGamePage() {
                         {language === 'fr'
                           ? 'Clique pour attraper les bons requins !'
                           : language === 'en'
-                          ? 'Click to catch the right sharks!'
-                          : '¡Haz clic para atrapar los tiburones correctos!'}
+                            ? 'Click to catch the right sharks!'
+                            : '¡Haz clic para atrapar los tiburones correctos!'}
                       </span>
                     </li>
                   </ul>
@@ -412,8 +437,8 @@ export function SharkRhythmGamePage() {
                   {language === 'fr'
                     ? 'Prêt à jouer ?'
                     : language === 'en'
-                    ? 'Ready to play?'
-                    : '¿Listo para jugar?'}
+                      ? 'Ready to play?'
+                      : '¿Listo para jugar?'}
                 </h2>
                 <button
                   onClick={startGame}
@@ -533,21 +558,21 @@ export function SharkRhythmGamePage() {
                         {language === 'fr'
                           ? 'Bravo !'
                           : language === 'en'
-                          ? 'Great job!'
-                          : '¡Muy bien!'}
+                            ? 'Great job!'
+                            : '¡Muy bien!'}
                       </h2>
                       <p className="text-gray-600 mb-6">
                         {round < ROUNDS.length - 1
                           ? language === 'fr'
                             ? 'Prêt pour le round suivant ?'
                             : language === 'en'
-                            ? 'Ready for the next round?'
-                            : '¿Listo para la siguiente ronda?'
+                              ? 'Ready for the next round?'
+                              : '¿Listo para la siguiente ronda?'
                           : language === 'fr'
-                          ? 'Tu as terminé tous les rounds !'
-                          : language === 'en'
-                          ? 'You completed all rounds!'
-                          : '¡Completaste todas las rondas!'}
+                            ? 'Tu as terminé tous les rounds !'
+                            : language === 'en'
+                              ? 'You completed all rounds!'
+                              : '¡Completaste todas las rondas!'}
                       </p>
                       <button
                         onClick={nextRound}
@@ -557,13 +582,13 @@ export function SharkRhythmGamePage() {
                           ? language === 'fr'
                             ? 'Round suivant'
                             : language === 'en'
-                            ? 'Next round'
-                            : 'Siguiente ronda'
+                              ? 'Next round'
+                              : 'Siguiente ronda'
                           : language === 'fr'
-                          ? 'Rejouer'
-                          : language === 'en'
-                          ? 'Play again'
-                          : 'Jugar otra vez'}
+                            ? 'Rejouer'
+                            : language === 'en'
+                              ? 'Play again'
+                              : 'Jugar otra vez'}
                       </button>
                     </div>
                   </div>
@@ -591,8 +616,8 @@ export function SharkRhythmGamePage() {
               {language === 'fr'
                 ? 'La musique Baby Shark joue automatiquement pendant le jeu.'
                 : language === 'en'
-                ? 'Baby Shark music plays automatically during the game.'
-                : 'La música Baby Shark se reproduce automáticamente durante el juego.'}
+                  ? 'Baby Shark music plays automatically during the game.'
+                  : 'La música Baby Shark se reproduce automáticamente durante el juego.'}
             </p>
           </div>
         </div>

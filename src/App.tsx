@@ -21,12 +21,14 @@ import { ArticlePage } from './pages/ArticlePage';
 import { AuthProvider } from './contexts/AuthContext';
 import { LolaMemoryPage } from './pages/LolaMemoryPage';
 import { SharkRhythmGamePage } from './pages/SharkRhythmGamePage';
+import { ScrollToTop } from './components/ScrollToTop';
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <LanguageProvider>
+          <ScrollToTop />
           <SeoHead />
           <Layout>
             <Routes>

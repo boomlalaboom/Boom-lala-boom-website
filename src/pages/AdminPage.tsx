@@ -23,6 +23,7 @@ export function AdminPage() {
     const [error, setError] = useState<string | null>(null);
     const [generatingAI, setGeneratingAI] = useState(false);
     const [aiProgress, setAiProgress] = useState('');
+    const [allSongs, setAllSongs] = useState<any[]>([]);
 
     // Character reordering
     const [reorderMode, setReorderMode] = useState(false);
@@ -58,6 +59,15 @@ export function AdminPage() {
 
             if (error) throw error;
             setItems(data || []);
+
+            // If we are in games tab, also fetch all songs for the selection
+            if (activeTab === 'games') {
+                const { data: songsData } = await supabase
+                    .from('songs')
+                    .select('id, title_fr, title_en, title_es')
+                    .order('title_fr');
+                setAllSongs(songsData || []);
+            }
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -142,13 +152,12 @@ export function AdminPage() {
     };
 
     const startNew = () => {
-        const emptyItem: any = {
-            slug: '',
-            name_fr: '', name_en: '', name_es: '',
-            description_fr: '', description_en: '', description_es: '',
-        };
+        const emptyItem: any = {};
 
         if (activeTab === 'characters') {
+            emptyItem.slug_fr = ''; emptyItem.slug_en = ''; emptyItem.slug_es = '';
+            emptyItem.name_fr = ''; emptyItem.name_en = ''; emptyItem.name_es = '';
+            emptyItem.description_fr = ''; emptyItem.description_en = ''; emptyItem.description_es = '';
             emptyItem.image_url = '';
             emptyItem.coloring_url = '';
             emptyItem.universe_fr = '';
@@ -161,17 +170,26 @@ export function AdminPage() {
             emptyItem.color_secondary = '#FFD93D';
             emptyItem.order_position = 1;
         } else if (activeTab === 'songs') {
+            emptyItem.slug_fr = ''; emptyItem.slug_en = ''; emptyItem.slug_es = '';
             emptyItem.title_fr = ''; emptyItem.title_en = ''; emptyItem.title_es = '';
+            emptyItem.description_fr = ''; emptyItem.description_en = ''; emptyItem.description_es = '';
             emptyItem.youtube_id_fr = ''; emptyItem.youtube_id_en = ''; emptyItem.youtube_id_es = '';
             emptyItem.is_featured = false;
             emptyItem.age_min = 3; emptyItem.age_max = 8;
         } else if (activeTab === 'games') {
+            emptyItem.slug_fr = ''; emptyItem.slug_en = ''; emptyItem.slug_es = '';
+            emptyItem.name_fr = ''; emptyItem.name_en = ''; emptyItem.name_es = '';
+            emptyItem.description_fr = ''; emptyItem.description_en = ''; emptyItem.description_es = '';
             emptyItem.game_type = 'rhythm';
             emptyItem.difficulty = 'easy';
+            emptyItem.song_id_fr = ''; emptyItem.song_id_en = ''; emptyItem.song_id_es = '';
             emptyItem.is_featured = false;
             emptyItem.age_min = 3; emptyItem.age_max = 8;
             emptyItem.instructions_fr = ''; emptyItem.instructions_en = ''; emptyItem.instructions_es = '';
         } else if (activeTab === 'activities') {
+            emptyItem.slug_fr = ''; emptyItem.slug_en = ''; emptyItem.slug_es = '';
+            emptyItem.title_fr = ''; emptyItem.title_en = ''; emptyItem.title_es = '';
+            emptyItem.description_fr = ''; emptyItem.description_en = ''; emptyItem.description_es = '';
             emptyItem.activity_type = 'coloring';
             emptyItem.age_min = 3; emptyItem.age_max = 8;
         } else if (activeTab === 'articles') {
@@ -207,7 +225,7 @@ export function AdminPage() {
         setAiProgress('Démarrage de la génération...');
 
         try {
-            const generated = await generateArticleWithAI(titleInput, 'parents et enfants de 2 à 8 ans', (message) => {
+            const generated = await generateArticleWithAI(titleInput, (message: string) => {
                 setAiProgress(message);
             });
 
@@ -267,7 +285,9 @@ export function AdminPage() {
                 name_fr: generated.name_fr,
                 name_en: generated.name_en,
                 name_es: generated.name_es,
-                slug: generated.slug,
+                slug_fr: generated.slug_fr,
+                slug_en: generated.slug_en,
+                slug_es: generated.slug_es,
                 description_fr: generated.description_fr,
                 description_en: generated.description_en,
                 description_es: generated.description_es,
@@ -361,7 +381,9 @@ export function AdminPage() {
                 name_fr: generated.name_fr,
                 name_en: generated.name_en,
                 name_es: generated.name_es,
-                slug: generated.slug,
+                slug_fr: generated.slug_fr,
+                slug_en: generated.slug_en,
+                slug_es: generated.slug_es,
                 description_fr: generated.description_fr,
                 description_en: generated.description_en,
                 description_es: generated.description_es,
@@ -560,9 +582,9 @@ export function AdminPage() {
                                     <div className="mt-3 w-full bg-purple-200 rounded-full h-2 overflow-hidden">
                                         <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse" style={{
                                             width: aiProgress.includes('français') ? '33%' :
-                                                   aiProgress.includes('anglais') ? '66%' :
-                                                   aiProgress.includes('espagnol') ? '90%' :
-                                                   aiProgress.includes('✅') ? '100%' : '10%',
+                                                aiProgress.includes('anglais') ? '66%' :
+                                                    aiProgress.includes('espagnol') ? '90%' :
+                                                        aiProgress.includes('✅') ? '100%' : '10%',
                                             transition: 'width 0.5s ease-in-out'
                                         }}></div>
                                     </div>
@@ -578,37 +600,21 @@ export function AdminPage() {
                                 <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">Basic Info</h3>
 
                                 {/* Slugs for Articles (3 separate slugs) */}
-                                {activeTab === 'articles' ? (
-                                    <>
-                                        {['fr', 'en', 'es'].map((lang) => (
-                                            <div key={lang}>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Slug ({lang.toUpperCase()})
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    value={editingItem[`slug_${lang}`] || ''}
-                                                    onChange={(e) => setEditingItem({ ...editingItem, [`slug_${lang}`]: e.target.value })}
-                                                    className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-[var(--brand-pink)] outline-none"
-                                                    placeholder={lang === 'fr' ? 'mon-article' : lang === 'en' ? 'my-article' : 'mi-articulo'}
-                                                />
-                                            </div>
-                                        ))}
-                                    </>
-                                ) : (
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Slug (URL identifier)</label>
+                                {['fr', 'en', 'es'].map((lang) => (
+                                    <div key={lang}>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Slug ({lang.toUpperCase()})
+                                        </label>
                                         <input
                                             type="text"
                                             required
-                                            value={editingItem.slug || ''}
-                                            onChange={(e) => setEditingItem({ ...editingItem, slug: e.target.value })}
-                                            className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-[var(--brand-pink)] outline-none"
-                                            placeholder="lola-the-cow"
+                                            value={editingItem[`slug_${lang}`] || ''}
+                                            onChange={(e) => setEditingItem({ ...editingItem, [`slug_${lang}`]: e.target.value })}
+                                            className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-[var(--brand-pink)] outline-none transition-all"
+                                            placeholder={lang === 'fr' ? 'mon-objet' : lang === 'en' ? 'my-item' : 'mi-cosa'}
                                         />
                                     </div>
-                                )}
+                                ))}
 
                                 {/* Character Colors + Order */}
                                 {activeTab === 'characters' && (
@@ -717,6 +723,25 @@ export function AdminPage() {
                                                 <option value="hard">Hard</option>
                                             </select>
                                         </div>
+                                        {['fr', 'en', 'es'].map((lang) => (
+                                            <div key={lang}>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Song Link ({lang.toUpperCase()})
+                                                </label>
+                                                <select
+                                                    value={editingItem[`song_id_${lang}`] || ''}
+                                                    onChange={(e) => setEditingItem({ ...editingItem, [`song_id_${lang}`]: e.target.value })}
+                                                    className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
+                                                >
+                                                    <option value="">No song selected</option>
+                                                    {allSongs.map(song => (
+                                                        <option key={song.id} value={song.id}>
+                                                            {song[`title_${lang}`] || song.title_fr}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        ))}
                                     </>
                                 )}
 
@@ -985,184 +1010,183 @@ export function AdminPage() {
                 </div>
             ) : activeTab !== 'settings' && (
                 <>
-                {activeTab === 'characters' && reorderMode ? (
-                    <div className="bg-white rounded-3xl shadow-xl overflow-hidden p-8">
-                        <div className="flex items-center justify-between mb-8">
-                            <h2 className="text-2xl font-bold text-[var(--brand-blue)]">
-                                Réorganiser les personnages
-                            </h2>
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={cancelReorder}
-                                    disabled={savingOrder}
-                                    className="flex items-center gap-2 px-6 py-3 bg-gray-500 text-white font-bold rounded-xl hover:bg-gray-600 transition-all disabled:opacity-50"
-                                >
-                                    <X className="w-5 h-5" />
-                                    Annuler
-                                </button>
-                                <button
-                                    onClick={saveCharacterOrder}
-                                    disabled={savingOrder}
-                                    className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-all disabled:opacity-50"
-                                >
-                                    {savingOrder ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                                    {savingOrder ? 'Sauvegarde...' : 'Sauvegarder'}
-                                </button>
+                    {activeTab === 'characters' && reorderMode ? (
+                        <div className="bg-white rounded-3xl shadow-xl overflow-hidden p-8">
+                            <div className="flex items-center justify-between mb-8">
+                                <h2 className="text-2xl font-bold text-[var(--brand-blue)]">
+                                    Réorganiser les personnages
+                                </h2>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={cancelReorder}
+                                        disabled={savingOrder}
+                                        className="flex items-center gap-2 px-6 py-3 bg-gray-500 text-white font-bold rounded-xl hover:bg-gray-600 transition-all disabled:opacity-50"
+                                    >
+                                        <X className="w-5 h-5" />
+                                        Annuler
+                                    </button>
+                                    <button
+                                        onClick={saveCharacterOrder}
+                                        disabled={savingOrder}
+                                        className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-all disabled:opacity-50"
+                                    >
+                                        {savingOrder ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                        {savingOrder ? 'Sauvegarde...' : 'Sauvegarder'}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="space-y-3">
-                            {items.map((item, index) => (
-                                <div
-                                    key={item.id}
-                                    draggable
-                                    onDragStart={() => handleDragStart(index)}
-                                    onDragOver={(e) => handleDragOver(e, index)}
-                                    onDragEnd={handleDragEnd}
-                                    className={`bg-white rounded-xl p-4 shadow-md cursor-move transition-all border-2 ${
-                                        draggedIndex === index ? 'opacity-50 border-[var(--brand-pink)]' : 'border-gray-200 hover:border-[var(--brand-blue)] hover:shadow-lg'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <GripVertical className="w-6 h-6 text-gray-400" />
-                                        <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border-2" style={{ borderColor: item.color_primary }}>
-                                            <img src={item.image_url} alt={item.name_fr} className="w-full h-full object-cover" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="font-bold text-lg" style={{ color: item.color_primary }}>
-                                                {item.name_fr}
-                                            </h3>
-                                            <p className="text-gray-600 text-sm truncate">{item.description_fr}</p>
-                                        </div>
-                                        <div className="text-sm text-gray-500 font-medium bg-gray-100 px-3 py-1 rounded-full">
-                                            #{index + 1}
+                            <div className="space-y-3">
+                                {items.map((item, index) => (
+                                    <div
+                                        key={item.id}
+                                        draggable
+                                        onDragStart={() => handleDragStart(index)}
+                                        onDragOver={(e) => handleDragOver(e, index)}
+                                        onDragEnd={handleDragEnd}
+                                        className={`bg-white rounded-xl p-4 shadow-md cursor-move transition-all border-2 ${draggedIndex === index ? 'opacity-50 border-[var(--brand-pink)]' : 'border-gray-200 hover:border-[var(--brand-blue)] hover:shadow-lg'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <GripVertical className="w-6 h-6 text-gray-400" />
+                                            <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border-2" style={{ borderColor: item.color_primary }}>
+                                                <img src={item.image_url} alt={item.name_fr} className="w-full h-full object-cover" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="font-bold text-lg" style={{ color: item.color_primary }}>
+                                                    {item.name_fr}
+                                                </h3>
+                                                <p className="text-gray-600 text-sm truncate">{item.description_fr}</p>
+                                            </div>
+                                            <div className="text-sm text-gray-500 font-medium bg-gray-100 px-3 py-1 rounded-full">
+                                                #{index + 1}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
-                        <div className="p-6 border-b flex items-center justify-between bg-gray-50/50">
-                            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 capitalize">
-                                {activeTab} List
-                                <span className="text-sm font-normal text-gray-400 ml-2">({items.length} items)</span>
-                            </h2>
-                            <div className="flex items-center gap-3">
-                                {activeTab === 'characters' && items.length > 0 && (
-                                    <button
-                                        onClick={() => setReorderMode(true)}
-                                        className="flex items-center gap-2 px-4 py-2 bg-[var(--brand-blue)] text-white font-bold rounded-xl hover:shadow-lg transition-all"
-                                    >
-                                        <GripVertical className="w-5 h-5" />
-                                        Réorganiser
-                                    </button>
-                                )}
-                                <button
-                                    onClick={startNew}
-                                    className="flex items-center gap-2 px-4 py-2 bg-[var(--brand-pink)] text-white font-bold rounded-xl hover:bg-[var(--brand-red)] transition-colors shadow-sm"
-                                >
-                                    <Plus className="w-5 h-5" />
-                                    Add New
-                                </button>
+                                ))}
                             </div>
                         </div>
+                    ) : (
+                        <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+                            <div className="p-6 border-b flex items-center justify-between bg-gray-50/50">
+                                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 capitalize">
+                                    {activeTab} List
+                                    <span className="text-sm font-normal text-gray-400 ml-2">({items.length} items)</span>
+                                </h2>
+                                <div className="flex items-center gap-3">
+                                    {activeTab === 'characters' && items.length > 0 && (
+                                        <button
+                                            onClick={() => setReorderMode(true)}
+                                            className="flex items-center gap-2 px-4 py-2 bg-[var(--brand-blue)] text-white font-bold rounded-xl hover:shadow-lg transition-all"
+                                        >
+                                            <GripVertical className="w-5 h-5" />
+                                            Réorganiser
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={startNew}
+                                        className="flex items-center gap-2 px-4 py-2 bg-[var(--brand-pink)] text-white font-bold rounded-xl hover:bg-[var(--brand-red)] transition-colors shadow-sm"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                        Add New
+                                    </button>
+                                </div>
+                            </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="bg-gray-50 text-gray-500 text-sm font-semibold uppercase tracking-wider">
-                                    <th className="px-6 py-4">Title / Name</th>
-                                    <th className="px-6 py-4">Slug</th>
-                                    {activeTab === 'articles' && <th className="px-6 py-4">Published</th>}
-                                    {activeTab === 'songs' && <th className="px-6 py-4 text-center">Featured</th>}
-                                    <th className="px-6 py-4 text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                                {loading ? (
-                                    <tr>
-                                        <td colSpan={activeTab === 'articles' ? 5 : activeTab === 'songs' ? 4 : 3} className="px-6 py-12 text-center">
-                                            <div className="flex flex-col items-center gap-2">
-                                                <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-pink)]" />
-                                                <span className="text-gray-400 font-medium">Loading content...</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : items.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={activeTab === 'articles' ? 5 : activeTab === 'songs' ? 4 : 3} className="px-6 py-12 text-center text-gray-400 italic">
-                                            No items found. Click "Add New" to get started!
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    items.map((item) => (
-                                        <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
-                                            <td className="px-6 py-4">
-                                                <div className="font-bold text-gray-800">
-                                                    {activeTab === 'articles' ? item.title_fr :
-                                                     activeTab === 'songs' || activeTab === 'activities' ? item.title_fr :
-                                                     item.name_fr}
-                                                </div>
-                                                <div className="text-sm text-gray-500 truncate max-w-xs">
-                                                    {activeTab === 'articles' ? item.excerpt_fr : item.description_fr}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-sm font-medium">
-                                                    {activeTab === 'articles' ? item.slug_fr : item.slug}
-                                                </span>
-                                            </td>
-                                            {activeTab === 'articles' && (
-                                                <td className="px-6 py-4">
-                                                    <div className="text-sm text-gray-600">
-                                                        {new Date(item.published_at).toLocaleDateString('fr-FR', {
-                                                            year: 'numeric',
-                                                            month: 'short',
-                                                            day: 'numeric'
-                                                        })}
-                                                    </div>
-                                                    <div className="text-xs text-gray-400">
-                                                        {item.author_name}
-                                                    </div>
-                                                </td>
-                                            )}
-                                            {activeTab === 'songs' && (
-                                                <td className="px-6 py-4 text-center">
-                                                    {item.is_featured ? (
-                                                        <span className="inline-block w-3 h-3 bg-green-500 rounded-full shadow-sm shadow-green-200" title="Featured"></span>
-                                                    ) : (
-                                                        <span className="inline-block w-3 h-3 bg-gray-200 rounded-full" title="Not Featured"></span>
-                                                    )}
-                                                </td>
-                                            )}
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
-                                                        onClick={() => startEdit(item)}
-                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                        title="Edit"
-                                                    >
-                                                        <Edit2 className="w-5 h-5" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(item.id)}
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 className="w-5 h-5" />
-                                                    </button>
-                                                </div>
-                                            </td>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="bg-gray-50 text-gray-500 text-sm font-semibold uppercase tracking-wider">
+                                            <th className="px-6 py-4">Title / Name</th>
+                                            <th className="px-6 py-4">Slug</th>
+                                            {activeTab === 'articles' && <th className="px-6 py-4">Published</th>}
+                                            {activeTab === 'songs' && <th className="px-6 py-4 text-center">Featured</th>}
+                                            <th className="px-6 py-4 text-center">Actions</th>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                )}
+                                    </thead>
+                                    <tbody className="divide-y">
+                                        {loading ? (
+                                            <tr>
+                                                <td colSpan={activeTab === 'articles' ? 5 : activeTab === 'songs' ? 4 : 3} className="px-6 py-12 text-center">
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-pink)]" />
+                                                        <span className="text-gray-400 font-medium">Loading content...</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : items.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={activeTab === 'articles' ? 5 : activeTab === 'songs' ? 4 : 3} className="px-6 py-12 text-center text-gray-400 italic">
+                                                    No items found. Click "Add New" to get started!
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            items.map((item) => (
+                                                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-bold text-gray-800">
+                                                            {activeTab === 'articles' ? item.title_fr :
+                                                                activeTab === 'songs' || activeTab === 'activities' ? item.title_fr :
+                                                                    item.name_fr}
+                                                        </div>
+                                                        <div className="text-sm text-gray-500 truncate max-w-xs">
+                                                            {activeTab === 'articles' ? item.excerpt_fr : item.description_fr}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-sm font-medium">
+                                                            {item.slug_fr}
+                                                        </span>
+                                                    </td>
+                                                    {activeTab === 'articles' && (
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm text-gray-600">
+                                                                {new Date(item.published_at).toLocaleDateString('fr-FR', {
+                                                                    year: 'numeric',
+                                                                    month: 'short',
+                                                                    day: 'numeric'
+                                                                })}
+                                                            </div>
+                                                            <div className="text-xs text-gray-400">
+                                                                {item.author_name}
+                                                            </div>
+                                                        </td>
+                                                    )}
+                                                    {activeTab === 'songs' && (
+                                                        <td className="px-6 py-4 text-center">
+                                                            {item.is_featured ? (
+                                                                <span className="inline-block w-3 h-3 bg-green-500 rounded-full shadow-sm shadow-green-200" title="Featured"></span>
+                                                            ) : (
+                                                                <span className="inline-block w-3 h-3 bg-gray-200 rounded-full" title="Not Featured"></span>
+                                                            )}
+                                                        </td>
+                                                    )}
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button
+                                                                onClick={() => startEdit(item)}
+                                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                                title="Edit"
+                                                            >
+                                                                <Edit2 className="w-5 h-5" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(item.id)}
+                                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 className="w-5 h-5" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
                 </>
             )}
 

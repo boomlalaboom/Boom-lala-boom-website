@@ -125,7 +125,7 @@ export function GamesSection({
 
                 {isLolaMemory(game) ? (
                   <Link
-                    to="/games/lola-memory"
+                    to={`/games/lola-memory${game[`song_id_${language}` as keyof Game] ? `?songId=${game[`song_id_${language}` as keyof Game]}` : ''}`}
                     className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-teal)] text-white rounded-full font-bold text-lg transition-all group-hover:scale-105"
                   >
                     <Gamepad2 className="w-5 h-5" />
@@ -133,7 +133,7 @@ export function GamesSection({
                   </Link>
                 ) : isSharkRhythm(game) ? (
                   <Link
-                    to="/games/shark-rhythm"
+                    to={`/games/shark-rhythm${game[`song_id_${language}` as keyof Game] ? `?songId=${game[`song_id_${language}` as keyof Game]}` : ''}`}
                     className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-teal)] text-white rounded-full font-bold text-lg transition-all group-hover:scale-105"
                   >
                     <Gamepad2 className="w-5 h-5" />

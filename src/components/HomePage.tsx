@@ -148,11 +148,16 @@ export function HomePage() {
                 const key = `${field}_${language}` as keyof Character;
                 return (character[key] as string) || (character[`${field}_fr` as keyof Character] as string) || '';
               };
+              const getLocalizedSlug = () => {
+                const key = `slug_${language}` as keyof Character;
+                return (character[key] as string) || character.slug_fr || '';
+              };
+              const characterSlug = getLocalizedSlug();
 
               return (
                 <Link
-                  key={character.slug}
-                  to={`/characters/${character.slug}`}
+                  key={character.id}
+                  to={`/characters/${characterSlug}`}
                   className="group relative bg-white rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer animate-slide-up"
                   style={{
                     animationDelay: `${index * 100}ms`,
@@ -192,6 +197,7 @@ export function HomePage() {
         songs={songs.slice(0, 3)}
         showViewMore={songs.length > 3}
         viewMoreTo="/songs"
+        viewMoreLabel={language === 'fr' ? 'Decouvrir plus de chansons' : language === 'en' ? 'Discover more songs' : 'Descubrir mas canciones'}
       />
       <GamesSection
         games={games.slice(0, 3)}
