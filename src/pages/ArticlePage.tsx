@@ -35,10 +35,33 @@ export function ArticlePage() {
     if (!article) return;
 
     // Attendre que le contenu soit rendu avant d'extraire les titres
-    const timeoutId = setTimeout(() => {
+    // Utiliser plusieurs tentatives avec des délais croissants pour gérer les connexions lentes
+    let attempts = 0;
+    const maxAttempts = 5;
+
+    const tryExtractTOC = () => {
+      if (!contentRef.current) {
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(tryExtractTOC, 100 * attempts); // 100ms, 200ms, 300ms, etc.
+        }
+        return;
+      }
+
+      const headings = contentRef.current.querySelectorAll('h2, h3, h4');
+      if (headings.length === 0 && attempts < maxAttempts) {
+        // Le contenu n'est pas encore rendu, réessayer
+        attempts++;
+        setTimeout(tryExtractTOC, 100 * attempts);
+        return;
+      }
+
+      // Le contenu est prêt, extraire la TOC
       extractTableOfContents();
       setupScrollSpy();
-    }, 100);
+    };
+
+    const timeoutId = setTimeout(tryExtractTOC, 150);
 
     return () => {
       clearTimeout(timeoutId);
