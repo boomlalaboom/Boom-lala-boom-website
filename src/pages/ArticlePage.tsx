@@ -67,14 +67,9 @@ export function ArticlePage() {
   }, [article]);
 
   const extractTableOfContents = () => {
-    if (!contentRef.current) {
-      console.log('❌ contentRef.current est null');
-      return;
-    }
+    if (!contentRef.current) return;
 
     const headings = contentRef.current.querySelectorAll('h2, h3, h4');
-    console.log(`✅ Nombre de titres trouvés: ${headings.length}`, headings);
-
     const tocItems: TocItem[] = [];
 
     headings.forEach((heading, index) => {
@@ -89,7 +84,6 @@ export function ArticlePage() {
       });
     });
 
-    console.log('📋 Table des matières extraite:', tocItems);
     setToc(tocItems);
   };
 
