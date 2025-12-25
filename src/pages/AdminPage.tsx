@@ -204,6 +204,8 @@ export function AdminPage() {
             emptyItem.is_featured = false;
             emptyItem.thumbnail_url = '';
             emptyItem.published_at = new Date().toISOString();
+            emptyItem.view_count = 0;
+            emptyItem.top_rank = null;
             delete emptyItem.slug;
             delete emptyItem.name_fr; delete emptyItem.name_en; delete emptyItem.name_es;
         }
@@ -765,6 +767,33 @@ export function AdminPage() {
                                                 onChange={(e) => setEditingItem({ ...editingItem, read_time_minutes: parseInt(e.target.value) })}
                                                 className="w-full px-4 py-2 border rounded-xl outline-none"
                                             />
+                                        </div>
+                                        <div className="flex gap-4">
+                                            <div className="flex-1">
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">View Count</label>
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    value={editingItem.view_count ?? 0}
+                                                    onChange={(e) => setEditingItem({ ...editingItem, view_count: Math.max(0, parseInt(e.target.value, 10) || 0) })}
+                                                    className="w-full px-4 py-2 border rounded-xl outline-none"
+                                                />
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Top Rank (1-3)</label>
+                                                <input
+                                                    type="number"
+                                                    min={1}
+                                                    max={3}
+                                                    value={editingItem.top_rank ?? ''}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value === '' ? null : parseInt(e.target.value, 10);
+                                                        setEditingItem({ ...editingItem, top_rank: value });
+                                                    }}
+                                                    className="w-full px-4 py-2 border rounded-xl outline-none"
+                                                    placeholder="Optional"
+                                                />
+                                            </div>
                                         </div>
                                     </>
                                 )}

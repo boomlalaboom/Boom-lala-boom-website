@@ -132,6 +132,8 @@ export interface Article {
   published_at: string;
   created_at: string;
   updated_at: string;
+  view_count?: number;
+  top_rank?: number | null;
   meta_title_fr?: string;
   meta_title_en?: string;
   meta_title_es?: string;

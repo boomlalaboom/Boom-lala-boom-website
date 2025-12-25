@@ -23,6 +23,7 @@ export function ArticlePage() {
   const [activeSection, setActiveSection] = useState<string>('');
   const contentRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const viewedArticleRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (slug) {
@@ -32,24 +33,48 @@ export function ArticlePage() {
 
   useEffect(() => {
     if (!article) return;
-    const rafId = window.requestAnimationFrame(() => {
+
+    // Attendre que le contenu soit rendu avant d'extraire les titres
+    const timeoutId = setTimeout(() => {
       extractTableOfContents();
       setupScrollSpy();
-    });
+    }, 100);
 
     return () => {
-      window.cancelAnimationFrame(rafId);
+      clearTimeout(timeoutId);
       if (observerRef.current) {
         observerRef.current.disconnect();
         observerRef.current = null;
       }
     };
+  }, [article, language]);
+
+  useEffect(() => {
+    if (!article?.id) return;
+    if (viewedArticleRef.current === article.id) return;
+    viewedArticleRef.current = article.id;
+
+    const nextCount = (article.view_count || 0) + 1;
+    supabase
+      .from('articles')
+      .update({ view_count: nextCount })
+      .eq('id', article.id)
+      .then(({ error }) => {
+        if (error) {
+          console.warn('Unable to update article view count', error.message);
+        }
+      });
   }, [article]);
 
   const extractTableOfContents = () => {
-    if (!contentRef.current) return;
+    if (!contentRef.current) {
+      console.log('❌ contentRef.current est null');
+      return;
+    }
 
     const headings = contentRef.current.querySelectorAll('h2, h3, h4');
+    console.log(`✅ Nombre de titres trouvés: ${headings.length}`, headings);
+
     const tocItems: TocItem[] = [];
 
     headings.forEach((heading, index) => {
@@ -64,6 +89,7 @@ export function ArticlePage() {
       });
     });
 
+    console.log('📋 Table des matières extraite:', tocItems);
     setToc(tocItems);
   };
 
