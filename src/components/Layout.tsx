@@ -14,7 +14,9 @@ export function Layout({ children }: LayoutProps) {
   const [showIntro, setShowIntro] = useState(false);
   const [introWithSound, setIntroWithSound] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const introVideoRef = useRef<HTMLVideoElement | null>(null);
+  const scrollLockRef = useRef<{ scrollY: number } | null>(null);
 
   useEffect(() => {
     const seen = sessionStorage.getItem('boomlala_intro_seen');
@@ -22,6 +24,50 @@ export function Layout({ children }: LayoutProps) {
       setShowIntro(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (!showMobileMenu) {
+      if (scrollLockRef.current) {
+        const { scrollY } = scrollLockRef.current;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, scrollY);
+        scrollLockRef.current = null;
+      }
+      return;
+    }
+
+    const scrollY = window.scrollY;
+    scrollLockRef.current = { scrollY };
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      if (scrollLockRef.current) {
+        const { scrollY: savedScrollY } = scrollLockRef.current;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, savedScrollY);
+        scrollLockRef.current = null;
+      }
+    };
+  }, [showMobileMenu]);
+
+  const openMobileMenu = () => {
+    setShowMobileMenu(true);
+    requestAnimationFrame(() => setMobileMenuOpen(true));
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+    window.setTimeout(() => setShowMobileMenu(false), 280);
+  };
 
   const closeIntro = () => {
     sessionStorage.setItem('boomlala_intro_seen', '1');
@@ -185,7 +231,7 @@ export function Layout({ children }: LayoutProps) {
               {/* Burger menu - visible uniquement sur mobile, positionné en premier à droite */}
               <button
                 type="button"
-                onClick={() => setShowMobileMenu(true)}
+                onClick={openMobileMenu}
                 className="md:hidden p-3 rounded-full bg-gradient-to-r from-[rgba(255,123,172,0.15)] to-[rgba(255,147,30,0.15)] hover:from-[rgba(255,123,172,0.25)] hover:to-[rgba(255,147,30,0.25)] shadow-md active:scale-95 transition-all order-2"
                 aria-label="Open menu"
               >
@@ -232,9 +278,12 @@ export function Layout({ children }: LayoutProps) {
       </header>
 
       {showMobileMenu && (
-        <div className="fixed inset-0 z-[55] bg-black/40 md:hidden" onClick={() => setShowMobileMenu(false)}>
+        <div
+          className={`fixed inset-0 z-[55] md:hidden transition-opacity duration-300 ${mobileMenuOpen ? 'bg-black/40 opacity-100' : 'bg-black/0 opacity-0'}`}
+          onClick={closeMobileMenu}
+        >
           <div
-            className="absolute top-0 right-0 h-full w-72 bg-white shadow-2xl p-6 flex flex-col gap-4"
+            className={`absolute top-0 right-0 h-full w-72 bg-white shadow-2xl p-6 flex flex-col gap-4 transition-transform duration-300 ease-out ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -243,7 +292,7 @@ export function Layout({ children }: LayoutProps) {
               </span>
               <button
                 type="button"
-                onClick={() => setShowMobileMenu(false)}
+                onClick={closeMobileMenu}
                 className="p-2 rounded-full bg-gray-100"
                 aria-label="Close menu"
               >
@@ -257,7 +306,7 @@ export function Layout({ children }: LayoutProps) {
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    onClick={() => setShowMobileMenu(false)}
+                    onClick={closeMobileMenu}
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-4 py-3 rounded-2xl font-medium transition-all ${isActive
                         ? 'bg-gradient-to-r from-[rgba(255,123,172,0.2)] to-[rgba(255,147,30,0.2)] text-[var(--brand-red)]'
