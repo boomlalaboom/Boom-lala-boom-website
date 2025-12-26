@@ -64,6 +64,7 @@ const translations = {
     play_now: 'Jouer maintenant',
     watch_now: 'Regarder maintenant',
     download: 'Télécharger',
+    home_cta_all_songs: 'Découvrir toutes nos chansons',
     loading: 'Chargement...',
   },
   en: {
@@ -118,6 +119,7 @@ const translations = {
     play_now: 'Play now',
     watch_now: 'Watch now',
     download: 'Download',
+    home_cta_all_songs: 'Discover all our songs',
     loading: 'Loading...',
   },
   es: {
@@ -172,6 +174,7 @@ const translations = {
     play_now: 'Jugar ahora',
     watch_now: 'Ver ahora',
     download: 'Descargar',
+    home_cta_all_songs: 'Descubrir todas nuestras canciones',
     loading: 'Cargando...',
   },
 };

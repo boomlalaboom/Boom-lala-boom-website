@@ -6,15 +6,13 @@ import { supabase, Character, Song, Game } from '../lib/supabase';
 import { SongsSection } from './SongsSection';
 import { GamesSection } from './GamesSection';
 import { CharactersSection } from './CharactersSection';
-import { ActivitiesSection } from './ActivitiesSection';
 import { ParentsSection } from './ParentsSection';
 import { LoadingState } from './LoadingState';
 import { AboutSection } from './AboutSection';
-import { LearningSection } from './LearningSection';
-import { ResourcesSection } from './ResourcesSection';
 import { FaqSection } from './FaqSection';
 import { ContactSection } from './ContactSection';
 import { AnimatedLogo } from './AnimatedLogo';
+import { NewsletterModal } from './NewsletterModal';
 
 export function HomePage() {
   const { language, t } = useLanguage();
@@ -23,6 +21,7 @@ export function HomePage() {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showNewsletter, setShowNewsletter] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -65,8 +64,8 @@ export function HomePage() {
         language === 'fr'
           ? 'Chargement bloque. Verifie la connexion Supabase.'
           : language === 'en'
-          ? 'Loading blocked. Check Supabase connection.'
-          : 'Carga bloqueada. Verifica la conexion a Supabase.',
+            ? 'Loading blocked. Check Supabase connection.'
+            : 'Carga bloqueada. Verifica la conexion a Supabase.',
       );
     } finally {
       setLoading(false);
@@ -85,8 +84,8 @@ export function HomePage() {
             {language === 'fr'
               ? 'Oups, le contenu ne charge pas'
               : language === 'en'
-              ? 'Oops, content is not loading'
-              : 'Ups, el contenido no carga'}
+                ? 'Oops, content is not loading'
+                : 'Ups, el contenido no carga'}
           </h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
@@ -195,9 +194,9 @@ export function HomePage() {
 
       <SongsSection
         songs={songs.slice(0, 3)}
-        showViewMore={songs.length > 3}
+        showViewMore={true}
         viewMoreTo="/songs"
-        viewMoreLabel={language === 'fr' ? 'Decouvrir plus de chansons' : language === 'en' ? 'Discover more songs' : 'Descubrir mas canciones'}
+        viewMoreLabel={t('home_cta_all_songs')}
       />
       <GamesSection
         games={games.slice(0, 3)}
@@ -211,9 +210,14 @@ export function HomePage() {
       />
 
       <AboutSection />
-      <ParentsSection />
+      <ParentsSection onNewsletterClick={() => setShowNewsletter(true)} />
       <FaqSection />
-      <ContactSection />
+      <ContactSection onNewsletterClick={() => setShowNewsletter(true)} />
+
+      <NewsletterModal
+        isOpen={showNewsletter}
+        onClose={() => setShowNewsletter(false)}
+      />
     </div>
   );
 }

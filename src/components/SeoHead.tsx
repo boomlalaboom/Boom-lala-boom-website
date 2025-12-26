@@ -11,7 +11,7 @@ interface SeoHeadProps {
 }
 
 export function SeoHead({ title: overrideTitle, description: overrideDescription, image, jsonLd, alternates }: SeoHeadProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const location = useLocation();
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export function SeoHead({ title: overrideTitle, description: overrideDescription
     const meta = pageMeta[location.pathname];
     const title = overrideTitle || (meta ? `${t('meta_title')} - ${meta.title}` : t('meta_title'));
     const description = overrideDescription || (meta ? meta.description : t('meta_description'));
-    const canonicalUrl = `${baseUrl}${location.pathname}${location.search || ''}`;
+    const canonicalUrl = `${baseUrl}${location.pathname}`;
     const imageUrl = image || `${baseUrl}/logo_boomlalaboom.png`;
 
     document.title = title;
@@ -100,6 +100,28 @@ export function SeoHead({ title: overrideTitle, description: overrideDescription
       twitterCard.setAttribute('content', 'summary_large_image');
     }
 
+    const localeMap: Record<string, string> = {
+      fr: 'fr_FR',
+      en: 'en_US',
+      es: 'es_ES',
+    };
+
+    const currentLocale = localeMap[language] || 'fr_FR';
+    const ogLocale = ensureMeta('meta[property="og:locale"]', { property: 'og:locale' });
+    if (ogLocale) {
+      ogLocale.setAttribute('content', currentLocale);
+    }
+
+    document.querySelectorAll('meta[property="og:locale:alternate"]').forEach(e => e.remove());
+    Object.entries(localeMap).forEach(([lang, locale]) => {
+      if (lang !== language) {
+        const el = document.createElement('meta');
+        el.setAttribute('property', 'og:locale:alternate');
+        el.setAttribute('content', locale);
+        document.head.appendChild(el);
+      }
+    });
+
     let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (!canonical) {
       canonical = document.createElement('link');
@@ -143,7 +165,7 @@ export function SeoHead({ title: overrideTitle, description: overrideDescription
       document.head.appendChild(script);
     }
     script.textContent = JSON.stringify(payload);
-  }, [location.pathname, location.search, t, overrideTitle, overrideDescription, image, jsonLd, alternates]);
+  }, [location.pathname, location.search, t, language, overrideTitle, overrideDescription, image, jsonLd, alternates]);
 
   return null;
 }

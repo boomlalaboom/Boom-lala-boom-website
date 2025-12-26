@@ -5,6 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { supabase, Song } from '../lib/supabase';
 import { PageHero } from '../components/PageHero';
 import { LoadingState } from '../components/LoadingState';
+import { SeoHead } from '../components/SeoHead';
 
 export function SongsPage() {
   const { t, language } = useLanguage();
@@ -30,8 +31,8 @@ export function SongsPage() {
         setError(language === 'fr'
           ? 'Impossible de charger les chansons.'
           : language === 'en'
-          ? 'Unable to load songs.'
-          : 'No se pudieron cargar las canciones.');
+            ? 'Unable to load songs.'
+            : 'No se pudieron cargar las canciones.');
       } finally {
         setLoading(false);
       }
@@ -103,6 +104,11 @@ export function SongsPage() {
 
   return (
     <div>
+      <SeoHead
+        title={activeTitle ? `${activeTitle} - BoomLaLaBoom` : undefined}
+        description={activeDescription}
+        image={activeVideoId ? `https://img.youtube.com/vi/${activeVideoId}/maxresdefault.jpg` : undefined}
+      />
       <PageHero
         title={t('songs_page_title')}
         subtitle={t('songs_page_subtitle')}
@@ -150,11 +156,10 @@ export function SongsPage() {
                     <button
                       key={song.id}
                       onClick={() => setActiveSong(song)}
-                      className={`w-full flex items-center gap-3 text-left rounded-2xl p-3 transition-all ${
-                        activeSong?.id === song.id
-                          ? 'bg-[rgba(255,159,0,0.2)]'
-                          : 'hover:bg-[rgba(4,87,186,0.08)]'
-                      }`}
+                      className={`w-full flex items-center gap-3 text-left rounded-2xl p-3 transition-all ${activeSong?.id === song.id
+                        ? 'bg-[rgba(255,159,0,0.2)]'
+                        : 'hover:bg-[rgba(4,87,186,0.08)]'
+                        }`}
                     >
                       <div className="relative w-24 h-16 rounded-xl overflow-hidden bg-gray-200 flex-shrink-0">
                         <img

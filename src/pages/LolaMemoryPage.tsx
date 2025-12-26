@@ -3,6 +3,7 @@ import { Sparkles, Volume2, VolumeX, RotateCcw, ArrowRight, PlayCircle } from 'l
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { SeoHead } from '../components/SeoHead';
 
 type Card = {
   id: string;
@@ -124,8 +125,47 @@ export function LolaMemoryPage() {
     setLevelIndex((prev) => Math.min(prev + 1, LEVELS.length - 1));
   };
 
+  // SEO
+  const baseUrl = 'https://boomlalaboom.com';
+  const alternates = [
+    { hreflang: 'fr', href: `${baseUrl}/games/lola-memory` },
+    { hreflang: 'en', href: `${baseUrl}/games/lola-memory` },
+    { hreflang: 'es', href: `${baseUrl}/games/lola-memory` },
+    { hreflang: 'x-default', href: `${baseUrl}/games/lola-memory` },
+  ];
+
+  const titles = {
+    fr: 'Jeu Mémoire de Lola - Memory avec Lola la Vache',
+    en: 'Lola Memory Game - Memory Game with Lola the Cow',
+    es: 'Juego de Memoria de Lola - Memoria con Lola la Vaca',
+  };
+
+  const descriptions = {
+    fr: 'Entraîne ta mémoire avec Lola la vache ! Un jeu de memory éducatif pour enfants avec 4 niveaux de difficulté.',
+    en: 'Train your memory with Lola the cow! An educational memory game for kids with 4 difficulty levels.',
+    es: '¡Entrena tu memoria con Lola la vaca! Un juego de memoria educativo para niños con 4 niveles de dificultad.',
+  };
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Game',
+    name: titles[language as keyof typeof titles],
+    description: descriptions[language as keyof typeof descriptions],
+    url: `${baseUrl}/games/lola-memory`,
+    publisher: {
+      '@type': 'Organization',
+      name: 'BoomLaLaBoom',
+    },
+  };
+
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-[#00B7FF] to-[#0457BA] text-white overflow-hidden">
+      <SeoHead
+        title={titles[language as keyof typeof titles]}
+        description={descriptions[language as keyof typeof descriptions]}
+        alternates={alternates}
+        jsonLd={jsonLd}
+      />
       <div className="relative z-10 container mx-auto px-4 py-12">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-10">
           <div>

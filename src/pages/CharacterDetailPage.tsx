@@ -5,6 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { PageHero } from '../components/PageHero';
 import { supabase, Character } from '../lib/supabase';
 import { LoadingState } from '../components/LoadingState';
+import { SeoHead } from '../components/SeoHead';
 
 export function CharacterDetailPage() {
   const { slug } = useParams();
@@ -105,8 +106,44 @@ export function CharacterDetailPage() {
   const coloringUrl = character.coloring_url || imageUrl;
   const colorPrimary = character.color_primary || '#0457BA';
 
+  // SEO: Build hreflang alternates for all language slugs
+  const baseUrl = 'https://boomlalaboom.com';
+  const alternates: { hreflang: string; href: string }[] = [];
+
+  if (character.slug_fr) {
+    alternates.push({ hreflang: 'fr', href: `${baseUrl}/characters/${character.slug_fr}` });
+  }
+  if (character.slug_en) {
+    alternates.push({ hreflang: 'en', href: `${baseUrl}/characters/${character.slug_en}` });
+  }
+  if (character.slug_es) {
+    alternates.push({ hreflang: 'es', href: `${baseUrl}/characters/${character.slug_es}` });
+  }
+  if (character.slug_fr) {
+    alternates.push({ hreflang: 'x-default', href: `${baseUrl}/characters/${character.slug_fr}` });
+  }
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    headline: name,
+    description: description,
+    image: imageUrl,
+    author: {
+      '@type': 'Organization',
+      name: 'BoomLaLaBoom',
+    },
+  };
+
   return (
     <div>
+      <SeoHead
+        title={`${name} - BoomLaLaBoom`}
+        description={description}
+        image={imageUrl}
+        alternates={alternates}
+        jsonLd={jsonLd}
+      />
       <PageHero
         title={name}
         subtitle={description}

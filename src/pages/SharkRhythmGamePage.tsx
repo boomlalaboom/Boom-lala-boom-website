@@ -3,6 +3,7 @@ import { Volume2, VolumeX, RotateCcw, PlayCircle, Sparkles } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { SeoHead } from '../components/SeoHead';
 
 type SharkType = 'baby' | 'papa' | 'mama' | 'grandma' | 'grandpa';
 
@@ -310,8 +311,47 @@ export function SharkRhythmGamePage() {
 
   const videoId = customVideoId || BABY_SHARK_VIDEOS[language as keyof typeof BABY_SHARK_VIDEOS] || BABY_SHARK_VIDEOS.fr;
 
+  // SEO
+  const baseUrl = 'https://boomlalaboom.com';
+  const alternates = [
+    { hreflang: 'fr', href: `${baseUrl}/games/shark-rhythm` },
+    { hreflang: 'en', href: `${baseUrl}/games/shark-rhythm` },
+    { hreflang: 'es', href: `${baseUrl}/games/shark-rhythm` },
+    { hreflang: 'x-default', href: `${baseUrl}/games/shark-rhythm` },
+  ];
+
+  const titles = {
+    fr: 'Rythme Requin - Jeu Baby Shark',
+    en: 'Shark Rhythm - Baby Shark Game',
+    es: 'Ritmo Tiburón - Juego Baby Shark',
+  };
+
+  const descriptions = {
+    fr: 'Attrape les requins au rythme de Baby Shark ! Un jeu musical éducatif pour enfants.',
+    en: 'Catch the sharks to the rhythm of Baby Shark! An educational music game for kids.',
+    es: '¡Atrapa los tiburones al ritmo de Baby Shark! Un juego musical educativo para niños.',
+  };
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Game',
+    name: titles[language as keyof typeof titles],
+    description: descriptions[language as keyof typeof descriptions],
+    url: `${baseUrl}/games/shark-rhythm`,
+    publisher: {
+      '@type': 'Organization',
+      name: 'BoomLaLaBoom',
+    },
+  };
+
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#00B7FF] via-[#0080C8] to-[#004D7A] text-white overflow-hidden">
+      <SeoHead
+        title={titles[language as keyof typeof titles]}
+        description={descriptions[language as keyof typeof descriptions]}
+        alternates={alternates}
+        jsonLd={jsonLd}
+      />
 
       <div className="relative z-10 container mx-auto px-4 py-8">
         {/* En-tête */}

@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import { Music, Gamepad2, Users, Scissors, Info, Globe, Sparkles, BookOpen, Folder, Mail, Heart, FileText, Menu, X as CloseIcon } from 'lucide-react';
+import { Music, Gamepad2, Users, Scissors, Info, Globe, Sparkles, BookOpen, Folder, Mail, Heart, FileText, Menu, X as CloseIcon, Instagram, Youtube } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import { useLanguage, Language } from '../contexts/LanguageContext';
 
@@ -109,6 +109,35 @@ export function Layout({ children }: LayoutProps) {
     { code: 'es' as Language, label: 'Español', flag: '🇪🇸' },
   ];
 
+  const TikTokIcon = ({ className }: { className?: string }) => (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.89-.6-4.13-1.47-.13 3.44-.3 6.88-.45 10.32-.08 1.73-.65 3.51-1.92 4.75-1.27 1.24-3.13 1.88-4.93 1.93-1.8 0-3.61-.63-4.88-1.87-1.27-1.24-1.84-3.02-1.76-4.75.08-1.73.65-3.51 1.92-4.75 1.27-1.24 3.13-1.88 4.93-1.93.18 0 .36 0 .54.01v4.08c-.28-.02-.57-.02-.85-.02-.82.02-1.68.32-2.26.9-1.07 1.05-.13 3.05 1.34 2.8 1.47-.25 1.48-2.31 1.48-3.41-.01-4.71-.02-9.42-.03-14.13.01-.01.02-.01.03-.02z" />
+    </svg>
+  );
+
+  const socialLinks = {
+    instagram: {
+      fr: "https://www.instagram.com/boomlalaboom.fr?igsh=MTlpaTVuaG01bXNwbw==",
+      en: "https://www.instagram.com/boomlalaboom_kids?igsh=MWJmdGl0ZGhsYTFmNw==",
+      es: "https://www.instagram.com/boomlalaboom.es?igsh=a3A3dXQyYmQ3Zm5n"
+    },
+    tiktok: {
+      fr: "https://www.tiktok.com/@boomlalaboom.fr?_r=1&_t=ZN-92Xmm7kwkwY",
+      en: "https://www.tiktok.com/@boomlalaboom.kids?_r=1&_t=ZN-92XmnlWQ4d4",
+      es: "https://www.tiktok.com/@boomlalaboom.es?_r=1&_t=ZN-92Xmr6b3PWw"
+    },
+    youtube: {
+      fr: "https://www.youtube.com/@BoomLalaBoom_fr",
+      en: "https://www.youtube.com/@BoomLaLaBoom",
+      es: "https://www.youtube.com/@BoomLaLaBoom_es"
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FFE600] to-[#FF9F00]">
       {showIntro && (
@@ -141,13 +170,13 @@ export function Layout({ children }: LayoutProps) {
                 ? language === 'fr'
                   ? 'Son active. Vous pouvez entrer quand vous voulez.'
                   : language === 'en'
-                  ? 'Sound on. Enter whenever you want.'
-                  : 'Sonido activo. Entra cuando quieras.'
+                    ? 'Sound on. Enter whenever you want.'
+                    : 'Sonido activo. Entra cuando quieras.'
                 : language === 'fr'
-                ? 'Le son demarrera apres votre clic.'
-                : language === 'en'
-                ? 'Sound starts after your click.'
-                : 'El sonido empieza despues de tu clic.'}
+                  ? 'Le son demarrera apres votre clic.'
+                  : language === 'en'
+                    ? 'Sound starts after your click.'
+                    : 'El sonido empieza despues de tu clic.'}
             </p>
           </div>
         </div>
@@ -376,12 +405,12 @@ export function Layout({ children }: LayoutProps) {
               <div className="space-y-2">
                 <a
                   href="mailto:contact@boomlalaboom.com"
-                  className="inline-flex items-center space-x-2 transition-colors"
+                  className="flex items-center space-x-2 transition-colors"
                 >
                   <Mail className="w-5 h-5" />
                   <span className="footer-gradient-text">contact@boomlalaboom.com</span>
                 </a>
-                <div className="inline-flex items-center space-x-2">
+                <div className="flex items-center space-x-2">
                   <Info className="w-5 h-5" />
                   <span className="footer-gradient-text">
                     {language === 'fr' ? 'Lun-Ven 9h-18h' : language === 'en' ? 'Mon-Fri 9am-6pm' : 'Lun-Vie 9h-18h'}
@@ -391,9 +420,54 @@ export function Layout({ children }: LayoutProps) {
             </div>
           </div>
 
-          <div className="text-center mt-8 text-sm">
-            © 2024 BoomLaLaBoom. {language === 'fr' ? 'Tous droits réservés' : language === 'en' ? 'All rights reserved' : 'Todos los derechos reservados'}.
-            <Link to="/login" className="ml-4 text-xs opacity-50 hover:opacity-100 transition-opacity">Admin</Link>
+          <div className="mt-12 flex flex-col items-center gap-6">
+            <div className="flex items-center gap-6">
+              <a
+                href={socialLinks.instagram[language as keyof typeof socialLinks.instagram] || socialLinks.instagram.fr}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 rounded-full bg-[#FFE600] text-[#0457BA] flex items-center justify-center hover:scale-110 hover:shadow-lg transition-all"
+                aria-label="Instagram"
+              >
+                <Instagram className="w-6 h-6" />
+              </a>
+              <a
+                href={socialLinks.tiktok[language as keyof typeof socialLinks.tiktok] || socialLinks.tiktok.fr}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 rounded-full bg-[#FFE600] text-[#0457BA] flex items-center justify-center hover:scale-110 hover:shadow-lg transition-all"
+                aria-label="TikTok"
+              >
+                <TikTokIcon className="w-6 h-6" />
+              </a>
+              <a
+                href={socialLinks.youtube[language as keyof typeof socialLinks.youtube] || socialLinks.youtube.fr}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 rounded-full bg-[#FFE600] text-[#0457BA] flex items-center justify-center hover:scale-110 hover:shadow-lg transition-all"
+                aria-label="YouTube"
+              >
+                <Youtube className="w-6 h-6" />
+              </a>
+            </div>
+
+            <div className="text-center space-y-2">
+              <p className="text-sm">
+                © {new Date().getFullYear()} BoomLaLaBoom. {language === 'fr' ? 'Tous droits réservés' : language === 'en' ? 'All rights reserved' : 'Todos los derechos reservados'}.
+                <Link to="/login" className="ml-4 text-xs opacity-50 hover:opacity-100 transition-opacity">Admin</Link>
+              </p>
+              <p className="text-sm font-medium">
+                {language === 'fr' ? 'Site réalisé par ' : language === 'en' ? 'Website created by ' : 'Sitio web realizado por '}
+                <a
+                  href="https://webfityou.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline font-bold"
+                >
+                  WebFitYou
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       </footer>
