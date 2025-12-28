@@ -231,35 +231,45 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLanguage = (lang: Language) => {
     if (lang === currentLang) return;
 
-    const pathname = location.pathname;
+    const [pathname, search] = location.pathname.split('?');
     const segments = pathname.split('/').filter(Boolean);
+    const isLang = segments.length > 0 && ['fr', 'en', 'es'].includes(segments[0]);
 
-    // segments[0] is current language (fr, en, es)
-    // segments[1] is the current localized slug (e.g. "chansons")
+    // The path part without the language prefix (e.g., "activites/coloriages")
+    const fullPath = isLang ? segments.slice(1).join('/') : segments.join('/');
 
     let newPath = `/${lang}`;
 
-    if (segments.length > 0) {
-      const isLang = ['fr', 'en', 'es'].includes(segments[0]);
-      const currentSlug = isLang ? segments[1] : segments[0];
-      const rest = isLang ? segments.slice(2).join('/') : segments.slice(1).join('/');
+    if (fullPath) {
+      // 1. Try to find the canonical key for the ENTIRE current path (best match)
+      const fullCanonicalKey = getCanonicalKey(fullPath, currentLang);
 
-      if (currentSlug) {
-        // Try to find the canonical key for the current slug
-        const canonicalKey = getCanonicalKey(currentSlug, currentLang);
+      if (fullCanonicalKey && STATIC_ROUTES[fullCanonicalKey]) {
+        const targetPath = STATIC_ROUTES[fullCanonicalKey][lang];
+        newPath += `/${targetPath}`;
+      } else {
+        // 2. Try to translate segment by segment (fallback for dynamic routes like blog/:slug)
+        // We look for the first part that is a static route (like "blog" or "activities")
+        const currentSlug = isLang ? segments[1] : segments[0];
+        const rest = isLang ? segments.slice(2).join('/') : segments.slice(1).join('/');
 
-        if (canonicalKey && STATIC_ROUTES[canonicalKey]) {
-          // We found a translated route, use the target language version
-          const targetSlug = STATIC_ROUTES[canonicalKey][lang];
-          newPath += `/${targetSlug}${rest ? `/${rest}` : ''}`;
-        } else {
-          // No mapping found, just keep the segment as is (or it's a dynamic slug like /blog/slug)
-          newPath += '/' + (isLang ? segments.slice(1).join('/') : segments.join('/'));
+        if (currentSlug) {
+          const canonicalKey = getCanonicalKey(currentSlug, currentLang);
+
+          if (canonicalKey && STATIC_ROUTES[canonicalKey]) {
+            const targetSlug = STATIC_ROUTES[canonicalKey][lang];
+            newPath += `/${targetSlug}${rest ? `/${rest}` : ''}`;
+          } else {
+            // 3. Keep as is if no mapping found (e.g. unknown static page or complex dynamic route)
+            newPath += `/${fullPath}`;
+          }
         }
       }
     }
 
-    navigate(newPath + location.search);
+    // Preserve query parameters (already includes '?' if truthy)
+    const finalSearch = search ? `?${search}` : (location.search || '');
+    navigate(newPath + finalSearch);
   };
 
   const t = (key: string): string => {

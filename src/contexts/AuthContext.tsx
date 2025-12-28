@@ -54,8 +54,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 .map((email: string) => email.trim().toLowerCase())
                 .filter(Boolean);
 
-            if (adminEmails.length && userEmail) {
-                setIsAdmin(adminEmails.includes(userEmail.toLowerCase()));
+            if (adminEmails.length && userEmail && adminEmails.includes(userEmail.toLowerCase())) {
+                setIsAdmin(true);
                 setLoading(false);
                 return;
             }

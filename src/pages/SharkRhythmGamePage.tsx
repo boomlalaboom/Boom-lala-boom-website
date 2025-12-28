@@ -140,16 +140,39 @@ export function SharkRhythmGamePage() {
 
     const animate = () => {
       setFishes((prevFishes) => {
-        const updated = prevFishes
+        let updated = prevFishes
           .map((fish) => ({
             ...fish,
             y: fish.y + fish.speed, // Mouvement vertical vers le bas
           }))
           .filter((fish) => fish.y < 110); // Retirer les poissons hors écran (en bas)
 
-        // Ajouter de nouveaux poissons aléatoirement
-        if (Math.random() < 0.02 && updated.length < fishCount + 5) {
-          updated.push(generateFish());
+        // Verifier périodiquement si les requins requis sont toujours présents ou à venir
+        // Sinon, en réinjecter un
+        if (updated.length < fishCount + 3) {
+          const instruction = currentInstruction;
+          const remainingToCatch = instruction.sharks.filter(s => !caughtSharks.includes(s));
+
+          // Vérifier si au moins un des requins restants est déjà à l'écran
+          const isRequiredSharkOnScreen = updated.some(f =>
+            remainingToCatch.includes(f.type as SharkType)
+          );
+
+          if (!isRequiredSharkOnScreen && remainingToCatch.length > 0 && Math.random() < 0.01) {
+            // Respawn d'un requin requis manquant
+            const targetShark = remainingToCatch[Math.floor(Math.random() * remainingToCatch.length)];
+            updated.push({
+              id: `respawn-${targetShark}-${Date.now()}`,
+              type: targetShark,
+              x: Math.random() * 80 + 10,
+              y: -20,
+              speed: baseSpeed,
+              size: 120,
+            });
+          } else if (Math.random() < 0.03 && updated.length < fishCount + 5) {
+            // Spawn normal d'un poisson aléatoire
+            updated.push(generateFish());
+          }
         }
 
         return updated;
@@ -165,7 +188,7 @@ export function SharkRhythmGamePage() {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [gameStarted, fishCount]);
+  }, [gameStarted, fishCount, caughtSharks, currentInstruction]);
 
   // Suivre la souris pour l'épuisette
   useEffect(() => {
@@ -363,10 +386,10 @@ export function SharkRhythmGamePage() {
             </div>
             <h1 className="text-3xl md:text-5xl font-black mt-4 text-[#FFE600]">
               {language === 'fr'
-                ? 'Attrape les requins !'
+                ? 'Attrapez les requins dans votre filet !'
                 : language === 'en'
-                  ? 'Catch the sharks!'
-                  : '¡Atrapa los tiburones!'}
+                  ? 'Catch the sharks in your net!'
+                  : '¡Atrapa los tiburones en tu red!'}
             </h1>
           </div>
 

@@ -61,14 +61,26 @@ export function GamesSection({
 
   const isLolaMemory = (game: Game) => {
     const slugs = getSlugs(game);
-    return slugs.includes('lola-memory') || (game.game_type === 'memory' && slugs.some((slug) => /lola/i.test(slug)));
+    const name = (game.name_fr || '').toLowerCase();
+    const desc = (game.description_fr || '').toLowerCase();
+
+    return slugs.includes('lola-memory') ||
+      game.game_type === 'memory' ||
+      /lola|vache|memory/i.test(name) ||
+      /lola|vache|memory/i.test(desc);
   };
 
   const isSharkRhythm = (game: Game) => {
     const slugs = getSlugs(game);
-    return slugs.includes('shark-rhythm')
-      || slugs.includes('rythme-requin')
-      || (game.game_type === 'rhythm' && slugs.some((slug) => /shark|requin/i.test(slug)));
+    const name = (game.name_fr || '').toLowerCase();
+    const desc = (game.description_fr || '').toLowerCase();
+
+    return slugs.includes('shark-rhythm') ||
+      slugs.includes('rythme-requin') ||
+      game.game_type === 'rhythm' ||
+      /shark|requin|rythme/i.test(name) ||
+      /shark|requin|rythme/i.test(desc) ||
+      /filet/i.test(desc);
   };
 
   return (

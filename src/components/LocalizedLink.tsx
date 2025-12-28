@@ -11,24 +11,31 @@ export function Link({ to, ...props }: LinkProps) {
         if (to.startsWith('#')) return to;
 
         let path = to.startsWith('/') ? to : `/${to}`;
+        const [pathname, search] = path.split('?');
 
         // Remove existing language prefix if present
-        const segments = path.split('/').filter(Boolean);
+        const segments = pathname.split('/').filter(Boolean);
+        let canonicalPath = pathname;
         if (['fr', 'en', 'es'].includes(segments[0])) {
-            path = '/' + segments.slice(1).join('/');
+            canonicalPath = '/' + segments.slice(1).join('/');
         }
 
-        // Clean path for lookup
-        const cleanPath = path.replace(/^\//, '');
-        const baseRoute = cleanPath.split('/')[0]; // Handle nested paths like games/memory
-        const rest = cleanPath.split('/').slice(1).join('/');
+        // 1. Try exact match of the cleaned full path
+        const lookupPath = canonicalPath.replace(/^\/|\/$/g, '');
+        if (STATIC_ROUTES[lookupPath]) {
+            return `/${language}/${STATIC_ROUTES[lookupPath][language]}${search ? `?${search}` : ''}`;
+        }
+
+        // 2. Try matching the base route (existing logic)
+        const baseRoute = lookupPath.split('/')[0];
+        const rest = lookupPath.split('/').slice(1).join('/');
 
         if (STATIC_ROUTES[baseRoute]) {
             const localizedBase = STATIC_ROUTES[baseRoute][language];
-            return `/${language}/${localizedBase}${rest ? `/${rest}` : ''}`;
+            return `/${language}/${localizedBase}${rest ? `/${rest}` : ''}${search ? `?${search}` : ''}`;
         }
 
-        return `/${language}${path}`;
+        return `/${language}${canonicalPath}${search ? `?${search}` : ''}`;
     };
 
     return <RouterLink to={getLocalizedTo(to)} {...props} />;
@@ -43,24 +50,31 @@ export function NavLink({ to, ...props }: NavLinkProps) {
         if (to.startsWith('#')) return to;
 
         let path = to.startsWith('/') ? to : `/${to}`;
+        const [pathname, search] = path.split('?');
 
         // Remove existing language prefix if present
-        const segments = path.split('/').filter(Boolean);
+        const segments = pathname.split('/').filter(Boolean);
+        let canonicalPath = pathname;
         if (['fr', 'en', 'es'].includes(segments[0])) {
-            path = '/' + segments.slice(1).join('/');
+            canonicalPath = '/' + segments.slice(1).join('/');
         }
 
-        // Clean path for lookup
-        const cleanPath = path.replace(/^\//, '');
-        const baseRoute = cleanPath.split('/')[0];
-        const rest = cleanPath.split('/').slice(1).join('/');
+        // 1. Try exact match of the cleaned full path
+        const lookupPath = canonicalPath.replace(/^\/|\/$/g, '');
+        if (STATIC_ROUTES[lookupPath]) {
+            return `/${language}/${STATIC_ROUTES[lookupPath][language]}${search ? `?${search}` : ''}`;
+        }
+
+        // 2. Try matching the base route (existing logic)
+        const baseRoute = lookupPath.split('/')[0];
+        const rest = lookupPath.split('/').slice(1).join('/');
 
         if (STATIC_ROUTES[baseRoute]) {
             const localizedBase = STATIC_ROUTES[baseRoute][language];
-            return `/${language}/${localizedBase}${rest ? `/${rest}` : ''}`;
+            return `/${language}/${localizedBase}${rest ? `/${rest}` : ''}${search ? `?${search}` : ''}`;
         }
 
-        return `/${language}${path}`;
+        return `/${language}${canonicalPath}${search ? `?${search}` : ''}`;
     };
 
     return <RouterNavLink to={getLocalizedTo(to)} {...props} />;

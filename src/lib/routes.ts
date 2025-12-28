@@ -91,6 +91,16 @@ export const STATIC_ROUTES: Record<string, RouteMapping> = {
         fr: 'politique-des-cookies',
         en: 'cookie-policy',
         es: 'politica-de-cookies'
+    },
+    'games/shark-rhythm': {
+        fr: 'jeux/rythme-requin',
+        en: 'games/shark-rhythm',
+        es: 'juegos/ritmo-tiburon'
+    },
+    'games/lola-memory': {
+        fr: 'jeux/lola-memory',
+        en: 'games/lola-memory',
+        es: 'juegos/lola-memory'
     }
 };
 
@@ -114,8 +124,14 @@ export function getLocalizedPath(canonicalPath: string, lang: Language): string 
  * Finds the canonical route key from a localized slug and language.
  */
 export function getCanonicalKey(slug: string, lang: Language): string | null {
+    if (!slug) return null;
+
+    const normalizedSlug = slug.replace(/^\/|\/$/g, '').toLowerCase();
+
     for (const [key, mapping] of Object.entries(STATIC_ROUTES)) {
-        if (mapping[lang] === slug) {
+        if (!mapping[lang]) continue;
+        const langPath = mapping[lang].replace(/^\/|\/$/g, '').toLowerCase();
+        if (langPath === normalizedSlug) {
             return key;
         }
     }

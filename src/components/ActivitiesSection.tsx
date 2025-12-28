@@ -21,8 +21,8 @@ export function ActivitiesSection({ showHeader = true, variant = 'blue' }: Activ
           : 'Imprime y colorea tus personajes favoritos',
       color: 'from-[var(--brand-pink)] to-[var(--brand-orange)]',
       emoji: '🎨',
-      cta: language === 'fr' ? 'Découvrir tous nos coloriages' : language === 'en' ? 'Discover all coloring pages' : 'Descubrir todos los dibujos',
-      to: language === 'fr' ? '/activites/coloriages' : language === 'en' ? '/activities/coloring-pages' : '/actividades/paginas-para-colorear',
+      cta: language === 'fr' ? 'Découvrir tous nos coloriages' : language === 'en' ? 'Discover all coloring pages' : 'Descubrir tous les dessins',
+      to: '/colorings',
     },
     {
       icon: Scissors,
@@ -34,8 +34,8 @@ export function ActivitiesSection({ showHeader = true, variant = 'blue' }: Activ
           : 'Crea tus propios juguetes de papel',
       color: 'from-[var(--brand-blue)] to-[var(--brand-teal)]',
       emoji: '✂️',
-      cta: language === 'fr' ? 'Découvrir tous nos découpages' : language === 'en' ? 'Discover all cutouts' : 'Descubrir todos los recortes',
-      to: language === 'fr' ? '/activites/decoupages' : language === 'en' ? '/activities/paper-crafts' : '/actividades/manualidades',
+      cta: language === 'fr' ? 'Découvrir tous nos découpages' : language === 'en' ? 'Discover all cutouts' : 'Descubrir tous les découpages',
+      to: '/cuttings',
     },
     {
       icon: Award,
