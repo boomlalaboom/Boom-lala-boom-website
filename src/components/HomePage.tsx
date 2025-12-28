@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Music, Gamepad2, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from './LocalizedLink';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase, Character, Song, Game } from '../lib/supabase';
 import { SongsSection } from './SongsSection';

@@ -6,10 +6,12 @@ interface ImageUploaderProps {
   currentImageUrl?: string;
   onImageUploaded: (url: string) => void;
   articleSlug?: string;
-  bucket?: 'article-images' | 'game-images' | 'personnage';
+  bucket?: 'article-images' | 'game-images' | 'personnage' | 'coloriage' | 'decoupage';
   label?: string;
   pathPrefix?: string;
   fileSuffix?: string;
+  maxWidth?: number;
+  maxHeight?: number;
 }
 
 export function ImageUploader({
@@ -20,6 +22,8 @@ export function ImageUploader({
   label,
   pathPrefix,
   fileSuffix,
+  maxWidth = 1200,
+  maxHeight = 800,
 }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImageUrl || null);
@@ -74,9 +78,9 @@ export function ImageUploader({
         file,
         articleSlug,
         {
-          maxWidth: 1200,
-          maxHeight: 800,
-          quality: 0.85,
+          maxWidth,
+          maxHeight,
+          quality: 0.90, // Higher quality for potentially printable items
         },
         bucket,
         filePath,
@@ -179,11 +183,10 @@ export function ImageUploader({
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={handleClick}
-            className={`w-full h-48 border-2 border-dashed rounded-lg transition-colors flex flex-col items-center justify-center gap-4 cursor-pointer ${
-              isDragging
+            className={`w-full h-48 border-2 border-dashed rounded-lg transition-colors flex flex-col items-center justify-center gap-4 cursor-pointer ${isDragging
                 ? 'border-[var(--brand-pink)] bg-pink-50'
                 : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-[var(--brand-pink)]'
-            } ${(uploading || !articleSlug) ? 'opacity-50 cursor-not-allowed' : ''}`}
+              } ${(uploading || !articleSlug) ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {uploading ? (
               <>

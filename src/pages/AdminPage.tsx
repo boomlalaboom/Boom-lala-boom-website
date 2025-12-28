@@ -8,7 +8,8 @@ import {
     LogOut, Loader2, AlertCircle, Sparkles, Settings, GripVertical
 } from 'lucide-react';
 import { ImageUploader } from '../components/ImageUploader';
-import { generateArticleWithAI, generateGameWithAI, generateCharacterWithAI } from '../services/aiService';
+import { MultiImageUploader } from '../components/MultiImageUploader';
+import { generateArticleWithAI, generateGameWithAI, generateCharacterWithAI, generateActivityWithAI } from '../services/aiService';
 
 type Tab = 'characters' | 'songs' | 'games' | 'activities' | 'articles' | 'settings';
 
@@ -192,6 +193,9 @@ export function AdminPage() {
             emptyItem.description_fr = ''; emptyItem.description_en = ''; emptyItem.description_es = '';
             emptyItem.activity_type = 'coloring';
             emptyItem.age_min = 3; emptyItem.age_max = 8;
+            emptyItem.pdf_url_fr = ''; emptyItem.pdf_url_en = ''; emptyItem.pdf_url_es = '';
+            emptyItem.thumbnail_url = '';
+            emptyItem.download_count = 0;
         } else if (activeTab === 'articles') {
             emptyItem.slug_fr = ''; emptyItem.slug_en = ''; emptyItem.slug_es = '';
             emptyItem.title_fr = ''; emptyItem.title_en = ''; emptyItem.title_es = '';
@@ -309,6 +313,48 @@ export function AdminPage() {
         }
     };
 
+    const handleGenerateActivityWithAI = async () => {
+        if (!editingItem.title_fr && !editingItem.title_en && !editingItem.title_es) {
+            setError('Veuillez entrer au moins un titre pour générer avec l\'IA');
+            return;
+        }
+
+        const activityTitleInput = editingItem.title_fr || editingItem.title_en || editingItem.title_es;
+        const activityType = editingItem.activity_type || 'coloring';
+
+        setGeneratingAI(true);
+        setError(null);
+        setAiProgress('Démarrage de la génération...');
+
+        try {
+            const generated = await generateActivityWithAI(activityTitleInput, activityType, (message) => {
+                setAiProgress(message);
+            });
+
+            setEditingItem({
+                ...editingItem,
+                title_fr: generated.title_fr,
+                title_en: generated.title_en,
+                title_es: generated.title_es,
+                slug_fr: generated.slug_fr,
+                slug_en: generated.slug_en,
+                slug_es: generated.slug_es,
+                description_fr: generated.description_fr,
+                description_en: generated.description_en,
+                description_es: generated.description_es,
+            });
+            setAiProgress('✅ Génération terminée !');
+        } catch (err: any) {
+            setError(`Erreur IA: ${err.message}`);
+            setAiProgress('');
+        } finally {
+            setTimeout(() => {
+                setGeneratingAI(false);
+                setAiProgress('');
+            }, 2000);
+        }
+    };
+
     // Character reordering handlers
     const handleDragStart = (index: number) => {
         setDraggedIndex(index);
@@ -410,6 +456,8 @@ export function AdminPage() {
             <Loader2 className="w-12 h-12 animate-spin text-[var(--brand-pink)]" />
         </div>
     );
+
+    const activityBucket = editingItem?.activity_type === 'cutting' ? 'decoupage' : 'coloriage';
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
@@ -538,6 +586,26 @@ export function AdminPage() {
                                     )}
                                 </button>
                             )}
+                            {activeTab === 'activities' && (
+                                <button
+                                    type="button"
+                                    onClick={handleGenerateActivityWithAI}
+                                    disabled={generatingAI || loading}
+                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {generatingAI ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            <span>Génération IA...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="w-5 h-5" />
+                                            <span>Générer avec IA</span>
+                                        </>
+                                    )}
+                                </button>
+                            )}
                             <button
                                 onClick={() => setIsEditing(false)}
                                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -571,7 +639,15 @@ export function AdminPage() {
                         </div>
                     )}
 
-                    {(activeTab === 'articles' || activeTab === 'games' || activeTab === 'characters') && generatingAI && aiProgress && (
+                    {activeTab === 'activities' && (
+                        <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                            <p className="text-sm text-purple-700">
+                                💡 <strong>Astuce:</strong> Entrez un titre d'activité (coloriage ou découpage), puis cliquez sur "Générer avec IA" pour créer automatiquement les titres et descriptions en 3 langues.
+                            </p>
+                        </div>
+                    )}
+
+                    {(activeTab === 'articles' || activeTab === 'games' || activeTab === 'characters' || activeTab === 'activities') && generatingAI && aiProgress && (
                         <div className="mb-6 p-6 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300 rounded-2xl shadow-lg">
                             <div className="flex items-center gap-4">
                                 <div className="relative">
@@ -695,6 +771,42 @@ export function AdminPage() {
                                                 />
                                             </div>
                                         ))}
+                                    </div>
+                                )}
+
+                                {activeTab === 'activities' && (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Activity Type</label>
+                                            <select
+                                                value={editingItem.activity_type || 'coloring'}
+                                                onChange={(e) => setEditingItem({ ...editingItem, activity_type: e.target.value })}
+                                                className="w-full px-4 py-2 border rounded-xl outline-none"
+                                            >
+                                                <option value="coloring">Coloring</option>
+                                                <option value="cutting">Cutting</option>
+                                                <option value="card">Card Game</option>
+                                            </select>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            {['fr', 'en', 'es'].map((lang) => (
+                                                <div key={lang}>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Download URL ({lang.toUpperCase()})
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingItem[`pdf_url_${lang}`] || ''}
+                                                        onChange={(e) => setEditingItem({ ...editingItem, [`pdf_url_${lang}`]: e.target.value })}
+                                                        className="w-full px-4 py-2 border rounded-xl outline-none"
+                                                        placeholder="https://..."
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <p className="text-xs text-gray-500">
+                                            Si les liens sont vides, l image principale sera utilisée pour le téléchargement.
+                                        </p>
                                     </div>
                                 )}
 
@@ -889,6 +1001,43 @@ export function AdminPage() {
                                             bucket="game-images"
                                             label="Image du jeu (JPEG/PNG → WebP)"
                                         />
+                                    </div>
+                                )}
+
+                                {/* Activity Image */}
+                                {activeTab === 'activities' && (
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Main Image</label>
+                                            <ImageUploader
+                                                currentImageUrl={editingItem.thumbnail_url}
+                                                onImageUploaded={(url) => setEditingItem({ ...editingItem, thumbnail_url: url })}
+                                                articleSlug={editingItem.slug_fr || editingItem.slug_en || editingItem.slug_es}
+                                                bucket={activityBucket}
+                                                pathPrefix="activities"
+                                                fileSuffix="activity"
+                                                label="Image Principale (Affiche)"
+                                                maxWidth={2048}
+                                                maxHeight={1448}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Gallery (Plusieurs photos)</label>
+                                            <MultiImageUploader
+                                                imageUrls={editingItem.gallery_urls || []}
+                                                onImagesUpdated={(urls) => setEditingItem({ ...editingItem, gallery_urls: urls })}
+                                                articleSlug={editingItem.slug_fr || editingItem.slug_en || editingItem.slug_es}
+                                                bucket={activityBucket}
+                                                pathPrefix="activities"
+                                                fileSuffix="gallery"
+                                                maxWidth={2048}
+                                                maxHeight={1448}
+                                            />
+                                            <p className="text-xs text-gray-500 mt-2">
+                                                Ces images s'afficheront dans la carte de l'activité.
+                                            </p>
+                                        </div>
                                     </div>
                                 )}
                             </div>

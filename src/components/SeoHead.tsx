@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { STATIC_ROUTES, getCanonicalKey } from '../lib/routes';
 
 interface SeoHeadProps {
   title?: string;
@@ -17,22 +18,45 @@ export function SeoHead({ title: overrideTitle, description: overrideDescription
   useEffect(() => {
     const envSiteUrl = import.meta.env.VITE_SITE_URL as string | undefined;
     const baseUrl = (envSiteUrl || window.location.origin).replace(/\/$/, '');
+
+    // Extract the path without the language prefix
+    // path is like /fr/about -> /about
+    // path is like /fr -> /
+    const pathSegments = location.pathname.split('/').filter(Boolean);
+    // pathSegments for /fr/about is ['fr', 'about']
+    // pathSegments for /fr is ['fr']
+
+    // We assume the first segment is ALWAYS the language if we are inside the app routes
+    // But safely check if it is one of our languages
+    const currentLangPrefix = pathSegments[0];
+    const isLangPrefix = ['fr', 'en', 'es'].includes(currentLangPrefix);
+
+    const routePathSegments = isLangPrefix ? pathSegments.slice(1) : pathSegments;
+    const localizedSlug = routePathSegments[0] || '';
+    const canonicalKey = getCanonicalKey(localizedSlug, (currentLangPrefix as any) || 'fr') || localizedSlug;
+
     const pageMeta: Record<string, { title: string; description: string }> = {
-      '/about': { title: t('about_page_title'), description: t('about_page_subtitle') },
-      '/songs': { title: t('songs_page_title'), description: t('songs_page_subtitle') },
-      '/games': { title: t('games_page_title'), description: t('games_page_subtitle') },
-      '/characters': { title: t('characters_page_title'), description: t('characters_page_subtitle') },
-      '/activities': { title: t('activities_page_title'), description: t('activities_page_subtitle') },
-      '/learning': { title: t('learning_page_title'), description: t('learning_page_subtitle') },
-      '/resources': { title: t('resources_page_title'), description: t('resources_page_subtitle') },
-      '/parents': { title: t('parents_page_title'), description: t('parents_page_subtitle') },
-      '/faq': { title: t('faq_page_title'), description: t('faq_page_subtitle') },
-      '/contact': { title: t('contact_page_title'), description: t('contact_page_subtitle') },
+      '/': { title: t('meta_title'), description: t('meta_description') },
+      'about': { title: t('about_page_title'), description: t('about_page_subtitle') },
+      'songs': { title: t('songs_page_title'), description: t('songs_page_subtitle') },
+      'games': { title: t('games_page_title'), description: t('games_page_subtitle') },
+      'characters': { title: t('characters_page_title'), description: t('characters_page_subtitle') },
+      'activities': { title: t('activities_page_title'), description: t('activities_page_subtitle') },
+      'learning': { title: t('learning_page_title'), description: t('learning_page_subtitle') },
+      'resources': { title: t('resources_page_title'), description: t('resources_page_subtitle') },
+      'parents': { title: t('parents_page_title'), description: t('parents_page_subtitle') },
+      'faq': { title: t('faq_page_title'), description: t('faq_page_subtitle') },
+      'contact': { title: t('contact_page_title'), description: t('contact_page_subtitle') },
     };
 
-    const meta = pageMeta[location.pathname];
-    const title = overrideTitle || (meta ? `${t('meta_title')} - ${meta.title}` : t('meta_title'));
+    // If routePath is empty (just /fr), it becomes /
+    const lookupPath = canonicalKey || '/';
+
+    const meta = pageMeta[lookupPath];
+    // If on home, don't prefix "BoomLaLaBoom - "
+    const title = overrideTitle || (meta ? (lookupPath === '/' ? meta.title : `${t('meta_title')} - ${meta.title}`) : t('meta_title'));
     const description = overrideDescription || (meta ? meta.description : t('meta_description'));
+
     const canonicalUrl = `${baseUrl}${location.pathname}`;
     const imageUrl = image || `${baseUrl}/logo_boomlalaboom.png`;
 
@@ -130,11 +154,19 @@ export function SeoHead({ title: overrideTitle, description: overrideDescription
     }
     canonical.setAttribute('href', canonicalUrl);
 
+    // Build default alternates based on the current path structure
+    const restOfPath = routePathSegments.slice(1).join('/');
+    const getLocalizedUrl = (lang: 'fr' | 'en' | 'es') => {
+      if (lookupPath === '/') return `${baseUrl}/${lang}`;
+      const slug = STATIC_ROUTES[canonicalKey] ? STATIC_ROUTES[canonicalKey][lang] : canonicalKey;
+      return `${baseUrl}/${lang}/${slug}${restOfPath ? `/${restOfPath}` : ''}`;
+    };
+
     const defaultAlternates = [
-      { hreflang: 'fr', href: `${baseUrl}${location.pathname}?lang=fr` },
-      { hreflang: 'en', href: `${baseUrl}${location.pathname}?lang=en` },
-      { hreflang: 'es', href: `${baseUrl}${location.pathname}?lang=es` },
-      { hreflang: 'x-default', href: `${baseUrl}${location.pathname}` },
+      { hreflang: 'fr', href: getLocalizedUrl('fr') },
+      { hreflang: 'en', href: getLocalizedUrl('en') },
+      { hreflang: 'es', href: getLocalizedUrl('es') },
+      { hreflang: 'x-default', href: getLocalizedUrl('fr') },
     ];
 
     const alternatesToApply = alternates && alternates.length ? alternates : defaultAlternates;

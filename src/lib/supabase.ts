@@ -106,6 +106,7 @@ export interface Activity {
   pdf_url_en: string;
   pdf_url_es: string;
   thumbnail_url: string;
+  gallery_urls?: string[];
   age_min: number;
   age_max: number;
   download_count: number;

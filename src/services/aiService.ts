@@ -93,6 +93,23 @@ interface LanguageCharacter {
   universe: string;
 }
 
+export interface GeneratedActivity {
+  title_fr: string;
+  title_en: string;
+  title_es: string;
+  slug_fr: string;
+  slug_en: string;
+  slug_es: string;
+  description_fr: string;
+  description_en: string;
+  description_es: string;
+}
+
+interface LanguageActivity {
+  title: string;
+  description: string;
+}
+
 /**
  * Génère un slug SEO-friendly à partir d'un titre
  */
@@ -319,6 +336,84 @@ La description doit:
 }
 
 /**
+ * Génère une activité dans une langue spécifique
+ */
+async function generateActivityForLanguage(
+  activityNameInput: string,
+  activityType: string,
+  language: 'fr' | 'en' | 'es',
+  API_KEY: string,
+  MODEL: string,
+  useDirectOpenAI: boolean
+): Promise<LanguageActivity> {
+  const languageNames = {
+    fr: 'français',
+    en: 'English',
+    es: 'español'
+  };
+
+  const prompt = `Génère un titre et une description courte pour une activité "${activityType}" en ${languageNames[language]} sur le thème: "${activityNameInput}"
+
+Public cible: Enfants de 2 à 8 ans
+Contexte: BoomLaLaBoom - chansons, jeux et activités éducatives
+
+Réponds UNIQUEMENT avec ce JSON (pas de markdown, pas de texte avant/après):
+{
+  "title": "Titre accrocheur et simple (40-60 caractères max)",
+  "description": "Description courte et claire de l'activité (90-140 caractères max)"
+}
+
+Le texte doit:
+- Être positif, joyeux et facile à comprendre
+- Donner envie de télécharger l'activité
+- Éviter tout vocabulaire sensible`;
+
+  const API_URL = useDirectOpenAI
+    ? 'https://api.openai.com/v1/chat/completions'
+    : 'https://openrouter.ai/api/v1/chat/completions';
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${API_KEY}`
+  };
+
+  if (!useDirectOpenAI) {
+    headers['HTTP-Referer'] = window.location.origin;
+    headers['X-Title'] = 'BoomLaLaBoom';
+  }
+
+  const response = await fetch(API_URL, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 600,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Erreur API (${response.status}): ${errorText}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+
+  if (!content) {
+    throw new Error('No content generated from AI');
+  }
+
+  const jsonMatch = content.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('No JSON found in AI response');
+  }
+
+  return JSON.parse(jsonMatch[0]);
+}
+
+/**
  * Génère un jeu complet en 3 langues via IA
  */
 export async function generateGameWithAI(
@@ -385,6 +480,68 @@ export async function generateGameWithAI(
     };
   } catch (error) {
     console.error('Error generating game with AI:', error);
+    throw error;
+  }
+}
+
+/**
+ * Génère une activité complète en 3 langues via IA
+ */
+export async function generateActivityWithAI(
+  activityNameInput: string,
+  activityType: string,
+  onProgress?: (message: string) => void
+): Promise<GeneratedActivity> {
+  const API_KEY = getAPIKey();
+  let MODEL = getModel();
+
+  if (!API_KEY || API_KEY === 'your-openrouter-api-key-here') {
+    throw new Error('La clé API n\'est pas configurée. Veuillez aller dans l\'onglet "AI Settings".');
+  }
+
+  const useDirectOpenAI = isDirectOpenAI(API_KEY);
+
+  if (useDirectOpenAI && MODEL.startsWith('openai/')) {
+    MODEL = MODEL.replace('openai/', '');
+  }
+
+  if (!useDirectOpenAI && !MODEL.includes('/') && !MODEL.includes(':free')) {
+    MODEL = `openai/${MODEL}`;
+  }
+
+  try {
+    onProgress?.('Génération en français...');
+    const frActivity = await generateActivityForLanguage(activityNameInput, activityType, 'fr', API_KEY, MODEL, useDirectOpenAI);
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    onProgress?.('Génération en anglais...');
+    const enActivity = await generateActivityForLanguage(activityNameInput, activityType, 'en', API_KEY, MODEL, useDirectOpenAI);
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    onProgress?.('Génération en espagnol...');
+    const esActivity = await generateActivityForLanguage(activityNameInput, activityType, 'es', API_KEY, MODEL, useDirectOpenAI);
+
+    onProgress?.('Finalisation...');
+
+    const slug_fr = generateSlug(frActivity.title);
+    const slug_en = generateSlug(enActivity.title);
+    const slug_es = generateSlug(esActivity.title);
+
+    return {
+      title_fr: frActivity.title,
+      title_en: enActivity.title,
+      title_es: esActivity.title,
+      slug_fr,
+      slug_en,
+      slug_es,
+      description_fr: frActivity.description,
+      description_en: enActivity.description,
+      description_es: esActivity.description,
+    };
+  } catch (error) {
+    console.error('Error generating activity with AI:', error);
     throw error;
   }
 }

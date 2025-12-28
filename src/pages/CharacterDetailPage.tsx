@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { Link } from '../components/LocalizedLink';
 import { PlayCircle, Download, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { PageHero } from '../components/PageHero';
@@ -12,11 +13,15 @@ export function CharacterDetailPage() {
   const { language } = useLanguage();
   const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
+  const [videoSoundOn, setVideoSoundOn] = useState(false);
+  const [videoStarted, setVideoStarted] = useState(false);
 
   useEffect(() => {
     const loadCharacter = async () => {
       if (!slug) return;
       setLoading(true);
+      setVideoSoundOn(false);
+      setVideoStarted(false);
       const decodedSlug = decodeURIComponent(slug);
       const slugKey = `slug_${language}` as keyof Character;
       const { data, error } = await supabase
@@ -107,20 +112,20 @@ export function CharacterDetailPage() {
   const colorPrimary = character.color_primary || '#0457BA';
 
   // SEO: Build hreflang alternates for all language slugs
-  const baseUrl = 'https://boomlalaboom.com';
+  const baseUrl = ((import.meta.env.VITE_SITE_URL as string | undefined) || window.location.origin).replace(/\/$/, '');
   const alternates: { hreflang: string; href: string }[] = [];
 
   if (character.slug_fr) {
-    alternates.push({ hreflang: 'fr', href: `${baseUrl}/characters/${character.slug_fr}` });
+    alternates.push({ hreflang: 'fr', href: `${baseUrl}/fr/characters/${character.slug_fr}` });
   }
   if (character.slug_en) {
-    alternates.push({ hreflang: 'en', href: `${baseUrl}/characters/${character.slug_en}` });
+    alternates.push({ hreflang: 'en', href: `${baseUrl}/en/characters/${character.slug_en}` });
   }
   if (character.slug_es) {
-    alternates.push({ hreflang: 'es', href: `${baseUrl}/characters/${character.slug_es}` });
+    alternates.push({ hreflang: 'es', href: `${baseUrl}/es/characters/${character.slug_es}` });
   }
   if (character.slug_fr) {
-    alternates.push({ hreflang: 'x-default', href: `${baseUrl}/characters/${character.slug_fr}` });
+    alternates.push({ hreflang: 'x-default', href: `${baseUrl}/fr/characters/${character.slug_fr}` });
   }
 
   const jsonLd = {
@@ -197,8 +202,9 @@ export function CharacterDetailPage() {
                 <div className="mt-4 rounded-2xl overflow-hidden bg-[rgba(0,0,0,0.1)]">
                   {videoId ? (
                     <iframe
+                      key={`${videoId}-${videoSoundOn ? 'sound' : 'muted'}`}
                       title={`${name} video`}
-                      src={`https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&mute=1`}
+                      src={`https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&mute=${videoSoundOn ? 0 : 1}`}
                       className="w-full aspect-video"
                       allow="autoplay"
                     />
@@ -219,6 +225,30 @@ export function CharacterDetailPage() {
                       ? 'The video starts automatically muted.'
                       : 'El video se inicia automaticamente en silencio.'}
                 </p>
+                {videoId && (
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!videoStarted) setVideoStarted(true);
+                        setVideoSoundOn((prev) => !prev);
+                      }}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--brand-blue)] text-white font-semibold"
+                    >
+                      {videoSoundOn
+                        ? language === 'fr'
+                          ? 'Couper le son'
+                          : language === 'en'
+                            ? 'Mute video'
+                            : 'Silenciar video'
+                        : language === 'fr'
+                          ? 'Activer le son'
+                          : language === 'en'
+                            ? 'Enable sound'
+                            : 'Activar sonido'}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="bg-white rounded-3xl p-6 shadow-lg">

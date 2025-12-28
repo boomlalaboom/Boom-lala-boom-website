@@ -1,0 +1,444 @@
+{
+  "name": "BoomLaLaBoom - Générateur de blog",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                2,
+                4
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "b9c62e5e-42c6-4c2a-8b21-4ad29ab5f5b5",
+      "name": "🗓️ Déclencheur Blog BoomLaLaBoom",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -896,
+        96
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REPLACE_WITH_GOOGLE_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gid=0"
+        },
+        "options": {}
+      },
+      "id": "46f407f5-f9ad-4c57-a3f1-65e703168a7b",
+      "name": "📊 Google Sheets - Articles BoomLaLaBoom",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -672,
+        96
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Détection automatique des colonnes et sélection article BoomLaLaBoom\nconst sheetData = $input.all();\nconsole.log(`📊 Nombre de lignes: ${sheetData.length}`);\n\nif (!sheetData || sheetData.length === 0) {\n  throw new Error('❌ Aucune donnée du Google Sheets');\n}\n\nconst firstRow = sheetData[0]?.json || {};\nconst columns = Object.keys(firstRow);\nconsole.log('📋 Colonnes disponibles:', columns.join(', '));\n\nconst findColumn = (matcher) => columns.find((c) => matcher(c.toLowerCase()));\n\nconst titleCol = findColumn((c) => c.includes('titre') || c.includes('sujet') || c.includes('title')) || columns[1] || columns[0];\nconst statusCol = findColumn((c) => c.includes('réalisation') || c.includes('status') || c.includes('statut'));\nconst themeCol = findColumn((c) => c.includes('theme') || c.includes('thème') || c.includes('categorie') || c.includes('catégorie'));\nconst keywordsCol = findColumn((c) => c.includes('mot') && c.includes('clé')) || findColumn((c) => c.includes('keywords'));\nconst approachCol = findColumn((c) => c.includes('approche') || c.includes('angle'));\nconst imageCol = findColumn((c) => c.includes('image') || c.includes('thumbnail') || c.includes('cover'));\nconst featuredCol = findColumn((c) => c.includes('featured') || c.includes('a la une') || c.includes('à la une'));\n\nconsole.log('Colonnes utilisées:');\nconsole.log('  - Titre:', titleCol);\nconsole.log('  - Statut:', statusCol || 'non détectée');\nconsole.log('  - Thème:', themeCol || 'non détectée');\nconsole.log('  - Mots-clés:', keywordsCol || 'non détectée');\nconsole.log('  - Approche:', approachCol || 'non détectée');\nconsole.log('  - Image:', imageCol || 'non détectée');\nconsole.log('  - Featured:', featuredCol || 'non détectée');\n\nfor (let i = 0; i < sheetData.length; i++) {\n  const row = sheetData[i].json;\n  const lineNumber = i + 2;\n\n  const title = row[titleCol]?.toString().trim() || '';\n  const status = statusCol ? (row[statusCol]?.toString().trim().toUpperCase() || '') : '';\n  const theme = themeCol ? (row[themeCol]?.toString().trim() || '') : '';\n  const keywords = keywordsCol ? (row[keywordsCol]?.toString().trim() || '') : '';\n  const approach = approachCol ? (row[approachCol]?.toString().trim() || '') : '';\n  const imageUrl = imageCol ? (row[imageCol]?.toString().trim() || '') : '';\n  const featuredValue = featuredCol ? (row[featuredCol]?.toString().trim().toLowerCase() || '') : '';\n  const isFeatured = ['oui', 'true', '1', 'yes'].includes(featuredValue);\n\n  if (!title || title.toLowerCase().includes('titre')) continue;\n\n  if (status === 'FAIT' || status === 'RÉALISÉ' || status === 'TERMINE' || status === 'TERMINÉ') {\n    console.log(`✅ Ligne ${lineNumber}: Déjà traité - ${title}`);\n    continue;\n  }\n\n  console.log(`🎯 Article BoomLaLaBoom à traiter: ${title}`);\n  return [{\n    json: {\n      titre: title,\n      theme,\n      mots_cles: keywords,\n      approche: approach,\n      image_url: imageUrl,\n      is_featured: isFeatured,\n      ligne: lineNumber,\n      row_number: lineNumber,\n      workflow_termine: false,\n      article_trouve: true\n    }\n  }];\n}\n\nconsole.log('🎉 Tous les articles BoomLaLaBoom ont été traités!');\nreturn [{\n  json: {\n    workflow_termine: true,\n    article_trouve: false,\n    message: 'Tous les articles du sheet ont été générés!'\n  }\n}];"
+      },
+      "id": "1d4f02f7-0e7c-4c3a-bc46-8b102ae91d9a",
+      "name": "🎯 Sélecteur Article BoomLaLaBoom",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -448,
+        96
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "1a6a43e5-1f8c-4f6a-8c6c-c58bbd208d53",
+              "leftValue": "={{ $json.article_trouve }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "bcb90ef8-450d-4f4f-8f6b-5cb7cbeb3f83",
+      "name": "🔀 Vérification Articles",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -224,
+        96
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "model": "gpt-4o",
+        "prompt": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "Tu es rédacteur SEO pour BoomLaLaBoom (chansons, jeux et univers éducatif pour enfants).\\n\\nMISSION: Générer un article de blog en FR/EN/ES.\\n\\nFORMAT RÉPONSE: JSON STRICT (sans backticks):\\n{\\n  \\\"title_fr\\\": \\\"Titre SEO FR (55-65 caractères)\\\",\\n  \\\"slug_fr\\\": \\\"slug-fr\\\",\\n  \\\"excerpt_fr\\\": \\\"Résumé FR (130-160 caractères)\\\",\\n  \\\"content_fr\\\": \\\"Article HTML FR complet avec <h2>/<h3>/<p>/<ul>/<li>\\\",\\n  \\\"meta_title_fr\\\": \\\"Meta titre FR (50-60 caractères)\\\",\\n  \\\"meta_description_fr\\\": \\\"Meta description FR (145-160 caractères)\\\",\\n\\n  \\\"title_en\\\": \\\"SEO title EN (55-65 characters)\\\",\\n  \\\"slug_en\\\": \\\"slug-en\\\",\\n  \\\"excerpt_en\\\": \\\"EN excerpt (130-160 characters)\\\",\\n  \\\"content_en\\\": \\\"Full HTML EN article with <h2>/<h3>/<p>/<ul>/<li>\\\",\\n  \\\"meta_title_en\\\": \\\"Meta title EN (50-60 chars)\\\",\\n  \\\"meta_description_en\\\": \\\"Meta description EN (145-160 chars)\\\",\\n\\n  \\\"title_es\\\": \\\"Titulo SEO ES (55-65 caracteres)\\\",\\n  \\\"slug_es\\\": \\\"slug-es\\\",\\n  \\\"excerpt_es\\\": \\\"Resumen ES (130-160 caracteres)\\\",\\n  \\\"content_es\\\": \\\"Articulo HTML ES completo con <h2>/<h3>/<p>/<ul>/<li>\\\",\\n  \\\"meta_title_es\\\": \\\"Meta titulo ES (50-60 caracteres)\\\",\\n  \\\"meta_description_es\\\": \\\"Meta descripcion ES (145-160 caracteres)\\\"\\n}\\n\\nCONTRAINTES:\\n- Ton bienveillant, expert et simple pour les parents.\\n- Contenu utile et pédagogique, adapté aux enfants 2-8 ans.\\n- Inclure 3-4 sections H2 avec sous-parties H3.\\n- Ajouter une conclusion avec CTA vers chansons/jeux/personnages.\\n- Pas de promesses médicales, pas de contenu sensible.\\n- Slugs: minuscules, chiffres, tirets, sans accents.\\n- Longueur: ~800-1200 mots par langue.\\n"
+            },
+            {
+              "role": "user",
+              "content": "=SUJET: {{ $json.titre }}\\nTHEME: {{ $json.theme }}\\nMOTS-CLES: {{ $json.mots_cles }}\\nAPPROCHE: {{ $json.approche }}\\n\\nGénère l'article pour BoomLaLaBoom en FR/EN/ES dans le format JSON strict."
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 4096,
+          "temperature": 0.7,
+          "topP": 0.9
+        },
+        "requestOptions": {}
+      },
+      "id": "3b19de17-05db-4a73-9e8b-3392c2a74554",
+      "name": "🤖 OpenAI - Génération Article BoomLaLaBoom",
+      "type": "n8n-nodes-base.openAi",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "REPLACE_WITH_OPENAI_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_OPENAI_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Traitement et préparation article BoomLaLaBoom pour Supabase\nconst sourceInfo = $('🎯 Sélecteur Article BoomLaLaBoom').first().json;\nconst inputData = $input.first();\n\nlet rawContent = '';\nif (inputData?.json?.message?.content) {\n  rawContent = inputData.json.message.content;\n} else if (inputData?.json?.content) {\n  rawContent = inputData.json.content;\n} else if (typeof inputData?.json === 'string') {\n  rawContent = inputData.json;\n} else {\n  throw new Error('Format de réponse OpenAI non reconnu');\n}\n\nrawContent = rawContent.replace(/^```json\\s*/i, '').replace(/```\\s*$/i, '').trim();\n\nlet articleJson;\ntry {\n  articleJson = JSON.parse(rawContent);\n} catch (e) {\n  const match = rawContent.match(/{[\\s\\S]*}/);\n  if (match) {\n    articleJson = JSON.parse(match[0]);\n  } else {\n    throw new Error('Format JSON invalide');\n  }\n}\n\nconst normalizeSlug = (text) => {\n  return text\n    .toLowerCase()\n    .trim()\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/[^a-z0-9\\s-]/g, '')\n    .replace(/\\s+/g, '-')\n    .replace(/-+/g, '-')\n    .replace(/^-|-$/g, '');\n};\n\nconst stripHtml = (html = '') => html.replace(/<[^>]+>/g, ' ');\nconst wordCount = (text = '') => text.trim().split(/\\s+/).filter(Boolean).length;\n\nconst ensureSlug = (slug, title) => {\n  const base = slug || title || `article-${Date.now()}`;\n  return normalizeSlug(base);\n};\n\nconst contentFr = articleJson.content_fr || '';\nconst words = wordCount(stripHtml(contentFr));\n\nconst finalArticle = {\n  title_fr: articleJson.title_fr || sourceInfo.titre,\n  slug_fr: ensureSlug(articleJson.slug_fr, articleJson.title_fr || sourceInfo.titre),\n  excerpt_fr: articleJson.excerpt_fr || '',\n  content_fr: articleJson.content_fr || '',\n  meta_title_fr: articleJson.meta_title_fr || articleJson.title_fr || sourceInfo.titre,\n  meta_description_fr: articleJson.meta_description_fr || articleJson.excerpt_fr || '',\n\n  title_en: articleJson.title_en || '',\n  slug_en: ensureSlug(articleJson.slug_en, articleJson.title_en || articleJson.title_fr || sourceInfo.titre),\n  excerpt_en: articleJson.excerpt_en || '',\n  content_en: articleJson.content_en || '',\n  meta_title_en: articleJson.meta_title_en || articleJson.title_en || '',\n  meta_description_en: articleJson.meta_description_en || articleJson.excerpt_en || '',\n\n  title_es: articleJson.title_es || '',\n  slug_es: ensureSlug(articleJson.slug_es, articleJson.title_es || articleJson.title_fr || sourceInfo.titre),\n  excerpt_es: articleJson.excerpt_es || '',\n  content_es: articleJson.content_es || '',\n  meta_title_es: articleJson.meta_title_es || articleJson.title_es || '',\n  meta_description_es: articleJson.meta_description_es || articleJson.excerpt_es || '',\n\n  author_name: 'BoomLaLaBoom Team',\n  read_time_minutes: Math.max(1, Math.ceil(words / 200)),\n  thumbnail_url: sourceInfo.image_url || '',\n  is_featured: !!sourceInfo.is_featured,\n  published_at: new Date().toISOString(),\n  view_count: 0,\n  top_rank: null,\n  row_number: sourceInfo.row_number,\n  google_sheet_line: sourceInfo.ligne\n};\n\nreturn [{ json: finalArticle }];"
+      },
+      "id": "4d6fd183-bc6e-435b-9e0e-9ef995dc8a35",
+      "name": "⚙️ Traitement Article BoomLaLaBoom",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        224,
+        0
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "tableId": "articles",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "title_fr", "fieldValue": "={{ $json.title_fr }}" },
+            { "fieldId": "slug_fr", "fieldValue": "={{ $json.slug_fr }}" },
+            { "fieldId": "excerpt_fr", "fieldValue": "={{ $json.excerpt_fr }}" },
+            { "fieldId": "content_fr", "fieldValue": "={{ $json.content_fr }}" },
+            { "fieldId": "meta_title_fr", "fieldValue": "={{ $json.meta_title_fr }}" },
+            { "fieldId": "meta_description_fr", "fieldValue": "={{ $json.meta_description_fr }}" },
+            { "fieldId": "title_en", "fieldValue": "={{ $json.title_en }}" },
+            { "fieldId": "slug_en", "fieldValue": "={{ $json.slug_en }}" },
+            { "fieldId": "excerpt_en", "fieldValue": "={{ $json.excerpt_en }}" },
+            { "fieldId": "content_en", "fieldValue": "={{ $json.content_en }}" },
+            { "fieldId": "meta_title_en", "fieldValue": "={{ $json.meta_title_en }}" },
+            { "fieldId": "meta_description_en", "fieldValue": "={{ $json.meta_description_en }}" },
+            { "fieldId": "title_es", "fieldValue": "={{ $json.title_es }}" },
+            { "fieldId": "slug_es", "fieldValue": "={{ $json.slug_es }}" },
+            { "fieldId": "excerpt_es", "fieldValue": "={{ $json.excerpt_es }}" },
+            { "fieldId": "content_es", "fieldValue": "={{ $json.content_es }}" },
+            { "fieldId": "meta_title_es", "fieldValue": "={{ $json.meta_title_es }}" },
+            { "fieldId": "meta_description_es", "fieldValue": "={{ $json.meta_description_es }}" },
+            { "fieldId": "author_name", "fieldValue": "={{ $json.author_name }}" },
+            { "fieldId": "read_time_minutes", "fieldValue": "={{ $json.read_time_minutes }}" },
+            { "fieldId": "thumbnail_url", "fieldValue": "={{ $json.thumbnail_url }}" },
+            { "fieldId": "is_featured", "fieldValue": "={{ $json.is_featured }}" },
+            { "fieldId": "published_at", "fieldValue": "={{ $json.published_at }}" },
+            { "fieldId": "view_count", "fieldValue": 0 },
+            { "fieldId": "top_rank", "fieldValue": null }
+          ]
+        }
+      },
+      "id": "b7759c97-37a0-44b5-8e3f-6d4ccf5a0ac1",
+      "name": "💾 Supabase - Insertion Article",
+      "type": "n8n-nodes-base.supabase",
+      "position": [
+        448,
+        0
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "supabaseApi": {
+          "id": "REPLACE_WITH_SUPABASE_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_SUPABASE_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Préparation des données pour la mise à jour Google Sheet\nconst sourceInfo = $('🎯 Sélecteur Article BoomLaLaBoom').first().json;\n\nreturn [{\n  json: {\n    row_number: sourceInfo.row_number,\n    Statut: 'FAIT'\n  }\n}];"
+      },
+      "id": "7b2eab09-bc7b-4d2c-950c-2e111dbb0c44",
+      "name": "📝 Préparation MAJ Sheet",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REPLACE_WITH_GOOGLE_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.row_number }}",
+            "Statut": "={{ $json.Statut }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            { "id": "Titre", "displayName": "Titre", "type": "string" },
+            { "id": "Statut", "displayName": "Statut", "type": "string", "canBeUsedToMatch": true },
+            { "id": "row_number", "displayName": "row_number", "type": "number", "canBeUsedToMatch": true }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "d6dcb2b5-62fc-4ac0-b4c7-3d58a99b22b7",
+      "name": "✅ Google Sheets - MAJ Statut",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        896,
+        0
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Rapport final article BoomLaLaBoom\nconst article = $('⚙️ Traitement Article BoomLaLaBoom').first().json;\n\nconst rapport = {\n  succes: true,\n  timestamp: new Date().toISOString(),\n  article: {\n    titre: article.title_fr,\n    slug: article.slug_fr,\n    mots: article.content_fr ? article.content_fr.split(' ').length : 0,\n    temps_lecture: article.read_time_minutes,\n    ligne_sheet: article.google_sheet_line\n  },\n  message: '✅ Article BoomLaLaBoom généré avec succès',\n  note: 'Article publié automatiquement sur le blog'\n};\n\nreturn [{ json: rapport }];"
+      },
+      "id": "0bb9c35b-6e5c-4f7f-baba-7d49fe885d0a",
+      "name": "🎉 Rapport Publication",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1120,
+        0
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Workflow terminé - tous les articles traités\nconst rapport = {\n  workflow_termine: true,\n  timestamp: new Date().toISOString(),\n  message: 'Tous les articles BoomLaLaBoom du Google Sheet ont été générés avec succès!'\n};\n\nreturn [{ json: rapport }];"
+      },
+      "id": "2b41a168-3b96-4d74-a0ef-9c5c518d29bd",
+      "name": "🏁 Workflow Blog Terminé",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        0,
+        192
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "fromEmail": "contact@boomlalaboom.com",
+        "toEmail": "contact@boomlalaboom.com",
+        "subject": "=✅ Nouvel article publié : \"{{ $json.article.titre }}\"",
+        "html": "=Bonjour,\\n\\nUn nouvel article BoomLaLaBoom a été publié sur le site.\\n\\nTitre : {{ $json.article.titre }}\\nSlug : {{ $json.article.slug }}\\nTemps de lecture : {{ $json.article.temps_lecture }} min\\n\\nBelle journée !\\n\\nBoomLaLaBoom",
+        "options": {}
+      },
+      "id": "9f9f53f9-7d02-42aa-bc2f-6c3b2f5908b4",
+      "name": "Send Email - Confirmation",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1344,
+        0
+      ],
+      "webhookId": "a7b8f86c-9b33-4c0d-96b1-556d3d4b1b3f",
+      "notesInFlow": false,
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_SMTP_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_SMTP_CREDENTIAL_NAME"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "🗓️ Déclencheur Blog BoomLaLaBoom": {
+      "main": [
+        [
+          {
+            "node": "📊 Google Sheets - Articles BoomLaLaBoom",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 Google Sheets - Articles BoomLaLaBoom": {
+      "main": [
+        [
+          {
+            "node": "🎯 Sélecteur Article BoomLaLaBoom",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎯 Sélecteur Article BoomLaLaBoom": {
+      "main": [
+        [
+          {
+            "node": "🔀 Vérification Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔀 Vérification Articles": {
+      "main": [
+        [
+          {
+            "node": "🤖 OpenAI - Génération Article BoomLaLaBoom",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🏁 Workflow Blog Terminé",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 OpenAI - Génération Article BoomLaLaBoom": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Traitement Article BoomLaLaBoom",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Traitement Article BoomLaLaBoom": {
+      "main": [
+        [
+          {
+            "node": "💾 Supabase - Insertion Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💾 Supabase - Insertion Article": {
+      "main": [
+        [
+          {
+            "node": "📝 Préparation MAJ Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📝 Préparation MAJ Sheet": {
+      "main": [
+        [
+          {
+            "node": "✅ Google Sheets - MAJ Statut",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Google Sheets - MAJ Statut": {
+      "main": [
+        [
+          {
+            "node": "🎉 Rapport Publication",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎉 Rapport Publication": {
+      "main": [
+        [
+          {
+            "node": "Send Email - Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "REPLACE_WITH_VERSION_ID",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "id": "REPLACE_WITH_WORKFLOW_ID",
+  "tags": []
+}

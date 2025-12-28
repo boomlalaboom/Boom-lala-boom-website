@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
+import { createContext, useContext, useEffect, ReactNode } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { STATIC_ROUTES, getCanonicalKey } from '../lib/routes';
 
 export type Language = 'fr' | 'en' | 'es';
 
@@ -66,6 +67,15 @@ const translations = {
     download: 'Télécharger',
     home_cta_all_songs: 'Découvrir toutes nos chansons',
     loading: 'Chargement...',
+    footer_legal: 'Mentions Légales',
+    footer_privacy: 'Confidentialité',
+    footer_terms: 'CGU / CGV',
+    footer_cookies: 'Cookies',
+    cookie_title: 'Respect de votre vie privée',
+    cookie_text: 'Nous utilisons des cookies pour améliorer votre expérience, analyser le trafic du site et personnaliser le contenu. En continuant à naviguer, vous acceptez notre utilisation des cookies.',
+    cookie_accept: 'Tout accepter',
+    cookie_decline: 'Refuser',
+    cookie_settings: 'Paramètres',
   },
   en: {
     meta_title: 'BoomLaLaBoom | Kids songs and educational games',
@@ -121,6 +131,15 @@ const translations = {
     download: 'Download',
     home_cta_all_songs: 'Discover all our songs',
     loading: 'Loading...',
+    footer_legal: 'Legal Mentions',
+    footer_privacy: 'Privacy Policy',
+    footer_terms: 'Terms of Service',
+    footer_cookies: 'Cookies Policy',
+    cookie_title: 'Respect for your privacy',
+    cookie_text: 'We use cookies to improve your experience, analyze site traffic and personalize content. By continuing to browse, you agree to our use of cookies.',
+    cookie_accept: 'Accept all',
+    cookie_decline: 'Decline',
+    cookie_settings: 'Settings',
   },
   es: {
     meta_title: 'BoomLaLaBoom | Canciones y juegos educativos para ninos',
@@ -176,51 +195,79 @@ const translations = {
     download: 'Descargar',
     home_cta_all_songs: 'Descubrir todas nuestras canciones',
     loading: 'Cargando...',
+    footer_legal: 'Avisos Legales',
+    footer_privacy: 'Privacidad',
+    footer_terms: 'Condiciones Generales',
+    footer_cookies: 'Cookies',
+    cookie_title: 'Respeto a su privacidad',
+    cookie_text: 'Utilizamos cookies para mejorar su experiencia, analizar el tráfico del sitio y personalizar el contenido. Al continuar navegando, acepta nuestro uso de cookies.',
+    cookie_accept: 'Aceptar todo',
+    cookie_decline: 'Rechazar',
+    cookie_settings: 'Ajustes',
   },
 };
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
-  const [language, setLanguageState] = useState<Language>(() => {
-    const params = new URLSearchParams(window.location.search);
-    const queryLang = params.get('lang');
-    if (queryLang && ['fr', 'en', 'es'].includes(queryLang)) {
-      return queryLang as Language;
+  const navigate = useNavigate();
+
+  // Derive language from URL path first (e.g. /fr/about -> fr)
+  const getLanguageFromPath = (pathname: string): Language | null => {
+    const segments = pathname.split('/');
+    const firstSegment = segments[1]; // segments[0] is empty string
+    if (['fr', 'en', 'es'].includes(firstSegment)) {
+      return firstSegment as Language;
     }
-    const saved = localStorage.getItem('boomlalaboom_language');
-    if (saved && ['fr', 'en', 'es'].includes(saved)) {
-      return saved as Language;
-    }
-    const browserLang = navigator.language.split('-')[0];
-    if (['fr', 'en', 'es'].includes(browserLang)) {
-      return browserLang as Language;
-    }
-    return 'fr';
-  });
+    return null;
+  };
+
+  const currentLang = getLanguageFromPath(location.pathname) || 'fr';
 
   useEffect(() => {
-    localStorage.setItem('boomlalaboom_language', language);
-    document.documentElement.lang = language;
-  }, [language]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const queryLang = params.get('lang');
-    if (queryLang && ['fr', 'en', 'es'].includes(queryLang) && queryLang !== language) {
-      setLanguageState(queryLang as Language);
-    }
-  }, [language, location.search]);
+    document.documentElement.lang = currentLang;
+    localStorage.setItem('boomlalaboom_language', currentLang);
+  }, [currentLang]);
 
   const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
+    if (lang === currentLang) return;
+
+    const pathname = location.pathname;
+    const segments = pathname.split('/').filter(Boolean);
+
+    // segments[0] is current language (fr, en, es)
+    // segments[1] is the current localized slug (e.g. "chansons")
+
+    let newPath = `/${lang}`;
+
+    if (segments.length > 0) {
+      const isLang = ['fr', 'en', 'es'].includes(segments[0]);
+      const currentSlug = isLang ? segments[1] : segments[0];
+      const rest = isLang ? segments.slice(2).join('/') : segments.slice(1).join('/');
+
+      if (currentSlug) {
+        // Try to find the canonical key for the current slug
+        const canonicalKey = getCanonicalKey(currentSlug, currentLang);
+
+        if (canonicalKey && STATIC_ROUTES[canonicalKey]) {
+          // We found a translated route, use the target language version
+          const targetSlug = STATIC_ROUTES[canonicalKey][lang];
+          newPath += `/${targetSlug}${rest ? `/${rest}` : ''}`;
+        } else {
+          // No mapping found, just keep the segment as is (or it's a dynamic slug like /blog/slug)
+          newPath += '/' + (isLang ? segments.slice(1).join('/') : segments.join('/'));
+        }
+      }
+    }
+
+    navigate(newPath + location.search);
   };
 
   const t = (key: string): string => {
-    return translations[language][key as keyof typeof translations['fr']] || key;
+    return translations[currentLang][key as keyof typeof translations['fr']] || key;
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language: currentLang, setLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );

@@ -1,5 +1,5 @@
 import { Scissors, BookOpen, Music, Gamepad2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from './LocalizedLink';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface ResourcesSectionProps {
@@ -11,35 +11,35 @@ export function ResourcesSection({ showHeader = true }: ResourcesSectionProps) {
 
   const content = language === 'fr'
     ? {
-        title: 'Ressources pour la maison',
-        subtitle: 'Des activites imprimables et des idees simples pour continuer a la maison',
-        items: [
-          {
-            icon: Scissors,
-            title: 'Coloriages et decoupages',
-            description: 'Des fiches creatives pour travailler la motricite fine.',
-          },
-          {
-            icon: BookOpen,
-            title: 'Cartes de vocabulaire',
-            description: 'Images et mots pour apprendre les premiers sons et objets.',
-          },
-          {
-            icon: Music,
-            title: 'Rituels du quotidien',
-            description: 'Petites chansons pour le rangement, le dodo et le bain.',
-          },
-          {
-            icon: Gamepad2,
-            title: 'Jeux de mouvement',
-            description: 'Defis corporels et danses pour bouger en musique.',
-          },
-        ],
-        ctaTitle: 'Envie de recevoir les packs ?',
-        ctaText: 'Ecrivez-nous pour acceder aux ressources et aux mises a jour.',
-      }
+      title: 'Ressources pour la maison',
+      subtitle: 'Des activites imprimables et des idees simples pour continuer a la maison',
+      items: [
+        {
+          icon: Scissors,
+          title: 'Coloriages et decoupages',
+          description: 'Des fiches creatives pour travailler la motricite fine.',
+        },
+        {
+          icon: BookOpen,
+          title: 'Cartes de vocabulaire',
+          description: 'Images et mots pour apprendre les premiers sons et objets.',
+        },
+        {
+          icon: Music,
+          title: 'Rituels du quotidien',
+          description: 'Petites chansons pour le rangement, le dodo et le bain.',
+        },
+        {
+          icon: Gamepad2,
+          title: 'Jeux de mouvement',
+          description: 'Defis corporels et danses pour bouger en musique.',
+        },
+      ],
+      ctaTitle: 'Envie de recevoir les packs ?',
+      ctaText: 'Ecrivez-nous pour acceder aux ressources et aux mises a jour.',
+    }
     : language === 'en'
-    ? {
+      ? {
         title: 'Resources for home',
         subtitle: 'Printable activities and simple ideas to keep learning at home',
         items: [
@@ -67,7 +67,7 @@ export function ResourcesSection({ showHeader = true }: ResourcesSectionProps) {
         ctaTitle: 'Want the printable packs?',
         ctaText: 'Write to us to access the resources and updates.',
       }
-    : {
+      : {
         title: 'Recursos para casa',
         subtitle: 'Actividades imprimibles e ideas simples para seguir aprendiendo',
         items: [

@@ -1,5 +1,5 @@
 import { Users, Heart, Sparkles, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from './LocalizedLink';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Character } from '../lib/supabase';
 

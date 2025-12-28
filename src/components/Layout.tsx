@@ -1,6 +1,8 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Music, Gamepad2, Users, Scissors, Info, Globe, Sparkles, BookOpen, Folder, Mail, Heart, FileText, Menu, X as CloseIcon, Instagram, Youtube } from 'lucide-react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
+import { Link, NavLink } from './LocalizedLink';
+import { CookieConsent } from './CookieConsent';
 import { useLanguage, Language } from '../contexts/LanguageContext';
 
 interface LayoutProps {
@@ -257,7 +259,6 @@ export function Layout({ children }: LayoutProps) {
             </nav>
 
             <div className="flex items-center gap-3">
-              {/* Burger menu - visible uniquement sur mobile, positionné en premier à droite */}
               <button
                 type="button"
                 onClick={openMobileMenu}
@@ -267,7 +268,6 @@ export function Layout({ children }: LayoutProps) {
                 <Menu className="w-6 h-6 text-[var(--brand-blue)]" />
               </button>
 
-              {/* Sélecteur de langue */}
               <div className="relative order-1 md:order-none">
                 <button
                   onClick={() => setShowLangMenu(!showLangMenu)}
@@ -302,17 +302,18 @@ export function Layout({ children }: LayoutProps) {
               </div>
             </div>
           </div>
-
         </div>
       </header>
 
       {showMobileMenu && (
         <div
-          className={`fixed inset-0 z-[55] md:hidden transition-opacity duration-300 ${mobileMenuOpen ? 'bg-black/40 opacity-100' : 'bg-black/0 opacity-0'}`}
+          className={`fixed inset-0 z-[55] md:hidden transition-opacity duration-300 ${mobileMenuOpen ? 'bg-black/40 opacity-100' : 'bg-black/0 opacity-0'
+            }`}
           onClick={closeMobileMenu}
         >
           <div
-            className={`absolute top-0 right-0 h-full w-72 bg-white shadow-2xl p-6 flex flex-col gap-4 transition-transform duration-300 ease-out ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+            className={`absolute top-0 right-0 h-full w-72 bg-white shadow-2xl p-6 flex flex-col gap-4 transition-transform duration-300 ease-out ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+              }`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -454,9 +455,25 @@ export function Layout({ children }: LayoutProps) {
             <div className="text-center space-y-2">
               <p className="text-sm">
                 © {new Date().getFullYear()} BoomLaLaBoom. {language === 'fr' ? 'Tous droits réservés' : language === 'en' ? 'All rights reserved' : 'Todos los derechos reservados'}.
-                <Link to="/login" className="ml-4 text-xs opacity-50 hover:opacity-100 transition-opacity">Admin</Link>
+                <RouterLink to="/login" className="ml-4 text-xs opacity-50 hover:opacity-100 transition-opacity">Admin</RouterLink>
               </p>
-              <p className="text-sm font-medium">
+
+              <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-2">
+                <Link to="/legal" className="text-xs opacity-75 hover:opacity-100 hover:underline transition-all">
+                  {t('footer_legal')}
+                </Link>
+                <Link to="/privacy" className="text-xs opacity-75 hover:opacity-100 hover:underline transition-all">
+                  {t('footer_privacy')}
+                </Link>
+                <Link to="/terms" className="text-xs opacity-75 hover:opacity-100 hover:underline transition-all">
+                  {t('footer_terms')}
+                </Link>
+                <Link to="/cookies" className="text-xs opacity-75 hover:opacity-100 hover:underline transition-all">
+                  {t('footer_cookies')}
+                </Link>
+              </div>
+
+              <p className="text-sm font-medium pt-4">
                 {language === 'fr' ? 'Site réalisé par ' : language === 'en' ? 'Website created by ' : 'Sitio web realizado por '}
                 <a
                   href="https://webfityou.com/"
@@ -471,6 +488,7 @@ export function Layout({ children }: LayoutProps) {
           </div>
         </div>
       </footer>
+      <CookieConsent />
     </div>
   );
 }

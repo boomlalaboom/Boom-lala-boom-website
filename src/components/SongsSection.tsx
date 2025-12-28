@@ -1,5 +1,6 @@
 import { Music, Play, ArrowRight, X } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from './LocalizedLink';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Song } from '../lib/supabase';
 import { useState } from 'react';
@@ -45,7 +46,8 @@ export function SongsSection({
       setActiveVideo(youtubeId);
       return;
     }
-    navigate(`${watchPagePath}?video=${youtubeId}`);
+    const path = watchPagePath?.startsWith('/') ? watchPagePath : `/${watchPagePath}`;
+    navigate(`/${language}${path}?video=${youtubeId}`);
   };
 
   return (

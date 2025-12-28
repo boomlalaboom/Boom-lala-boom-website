@@ -1,4 +1,5 @@
-import { Scissors, Download, Palette, Award } from 'lucide-react';
+import { Scissors, ArrowRight, Palette, Award } from 'lucide-react';
+import { Link } from './LocalizedLink';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface ActivitiesSectionProps {
@@ -16,10 +17,12 @@ export function ActivitiesSection({ showHeader = true, variant = 'blue' }: Activ
       description: language === 'fr'
         ? 'Imprime et colorie tes personnages préférés'
         : language === 'en'
-        ? 'Print and color your favorite characters'
-        : 'Imprime y colorea tus personajes favoritos',
+          ? 'Print and color your favorite characters'
+          : 'Imprime y colorea tus personajes favoritos',
       color: 'from-[var(--brand-pink)] to-[var(--brand-orange)]',
       emoji: '🎨',
+      cta: language === 'fr' ? 'Découvrir tous nos coloriages' : language === 'en' ? 'Discover all coloring pages' : 'Descubrir todos los dibujos',
+      to: language === 'fr' ? '/activites/coloriages' : language === 'en' ? '/activities/coloring-pages' : '/actividades/paginas-para-colorear',
     },
     {
       icon: Scissors,
@@ -27,10 +30,12 @@ export function ActivitiesSection({ showHeader = true, variant = 'blue' }: Activ
       description: language === 'fr'
         ? 'Crée tes propres jouets en papier'
         : language === 'en'
-        ? 'Create your own paper toys'
-        : 'Crea tus propios juguetes de papel',
+          ? 'Create your own paper toys'
+          : 'Crea tus propios juguetes de papel',
       color: 'from-[var(--brand-blue)] to-[var(--brand-teal)]',
       emoji: '✂️',
+      cta: language === 'fr' ? 'Découvrir tous nos découpages' : language === 'en' ? 'Discover all cutouts' : 'Descubrir todos los recortes',
+      to: language === 'fr' ? '/activites/decoupages' : language === 'en' ? '/activities/paper-crafts' : '/actividades/manualidades',
     },
     {
       icon: Award,
@@ -38,10 +43,11 @@ export function ActivitiesSection({ showHeader = true, variant = 'blue' }: Activ
       description: language === 'fr'
         ? 'Joue avec des cartes personnalisées'
         : language === 'en'
-        ? 'Play with custom cards'
-        : 'Juega con tarjetas personalizadas',
+          ? 'Play with custom cards'
+          : 'Juega con tarjetas personalizadas',
       color: 'from-[var(--brand-green)] to-[var(--brand-sky)]',
       emoji: '🃏',
+      cta: language === 'fr' ? 'Bientôt disponible' : language === 'en' ? 'Coming soon' : 'Muy pronto',
     },
   ];
 
@@ -82,15 +88,26 @@ export function ActivitiesSection({ showHeader = true, variant = 'blue' }: Activ
                   </h3>
                   <p className="text-gray-600 mb-6">{activity.description}</p>
 
-                  <button
-                    className={`flex items-center justify-center space-x-2 w-full px-6 py-3 bg-gradient-to-r ${activity.color} text-white rounded-full font-bold shadow-lg hover:shadow-xl transition-all group-hover:scale-105`}
-                  >
-                    <Download className="w-5 h-5" />
-                    <span>{t('download')}</span>
-                  </button>
+                  {activity.to ? (
+                    <Link
+                      to={activity.to}
+                      className={`flex items-center justify-center space-x-2 w-full px-6 py-3 bg-gradient-to-r ${activity.color} text-white rounded-full font-bold shadow-lg hover:shadow-xl transition-all group-hover:scale-105`}
+                    >
+                      <ArrowRight className="w-5 h-5" />
+                      <span>{activity.cta}</span>
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      className={`flex items-center justify-center space-x-2 w-full px-6 py-3 bg-gradient-to-r ${activity.color} text-white rounded-full font-bold shadow-lg opacity-70 cursor-not-allowed`}
+                    >
+                      <span>{activity.cta}</span>
+                    </button>
+                  )}
 
                   <div className="mt-4 text-sm text-gray-500">
-                    {language === 'fr' ? 'Format A4 - PDF' : language === 'en' ? 'A4 Format - PDF' : 'Formato A4 - PDF'}
+                    {language === 'fr' ? 'Téléchargement disponible sur la page dédiée' : language === 'en' ? 'Downloads available on the dedicated page' : 'Descargas disponibles en la página dedicada'}
                   </div>
                 </div>
               </div>
@@ -111,8 +128,8 @@ export function ActivitiesSection({ showHeader = true, variant = 'blue' }: Activ
                 {language === 'fr'
                   ? 'Toutes nos activités sont conçues pour développer la créativité et la motricité fine de votre enfant. Imprimez sur du papier épais pour de meilleurs résultats !'
                   : language === 'en'
-                  ? 'All our activities are designed to develop your child\'s creativity and fine motor skills. Print on thick paper for best results!'
-                  : '¡Todas nuestras actividades están diseñadas para desarrollar la creatividad y las habilidades motoras finas de su hijo. Imprima en papel grueso para obtener mejores resultados!'}
+                    ? 'All our activities are designed to develop your child\'s creativity and fine motor skills. Print on thick paper for best results!'
+                    : '¡Todas nuestras actividades están diseñadas para desarrollar la creatividad y las habilidades motoras finas de su hijo. Imprima en papel grueso para obtener mejores resultados!'}
               </p>
             </div>
           </div>

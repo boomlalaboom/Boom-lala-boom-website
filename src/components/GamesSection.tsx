@@ -1,5 +1,5 @@
 import { Gamepad2, Star, Zap, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from './LocalizedLink';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Game } from '../lib/supabase';
 
@@ -86,11 +86,11 @@ export function GamesSection({
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="flex flex-wrap justify-center gap-10">
           {games.map((game, index) => (
             <div
               key={game.id}
-              className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 animate-slide-up cursor-pointer"
+              className="w-full md:w-[calc(50%-2.5rem)] lg:w-[calc(33.333%-2.5rem)] max-w-md group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 animate-slide-up cursor-pointer"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="relative aspect-video bg-gradient-to-br from-[rgba(63,169,245,0.2)] to-[rgba(34,181,115,0.2)] overflow-hidden">

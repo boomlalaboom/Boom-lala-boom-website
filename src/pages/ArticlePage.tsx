@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Link } from '../components/LocalizedLink';
 import { Calendar, Clock, ArrowLeft, BookOpen, List } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase, Article } from '../lib/supabase';
@@ -172,7 +173,7 @@ export function ArticlePage() {
       }
     } catch (error) {
       console.error('Error loading article:', error);
-      navigate('/blog');
+      navigate(`/${language}/blog`);
     } finally {
       setLoading(false);
     }
@@ -226,16 +227,16 @@ export function ArticlePage() {
   const alternates: { hreflang: string; href: string }[] = [];
 
   if (article.slug_fr) {
-    alternates.push({ hreflang: 'fr', href: `${baseUrl}/blog/${article.slug_fr}?lang=fr` });
+    alternates.push({ hreflang: 'fr', href: `${baseUrl}/fr/blog/${article.slug_fr}` });
   }
   if (article.slug_en) {
-    alternates.push({ hreflang: 'en', href: `${baseUrl}/blog/${article.slug_en}?lang=en` });
+    alternates.push({ hreflang: 'en', href: `${baseUrl}/en/blog/${article.slug_en}` });
   }
   if (article.slug_es) {
-    alternates.push({ hreflang: 'es', href: `${baseUrl}/blog/${article.slug_es}?lang=es` });
+    alternates.push({ hreflang: 'es', href: `${baseUrl}/es/blog/${article.slug_es}` });
   }
   if (article.slug_fr) {
-    alternates.push({ hreflang: 'x-default', href: `${baseUrl}/blog/${article.slug_fr}` });
+    alternates.push({ hreflang: 'x-default', href: `${baseUrl}/fr/blog/${article.slug_fr}` });
   }
 
   const jsonLd = {
@@ -258,7 +259,7 @@ export function ArticlePage() {
     },
     datePublished: article.published_at,
     dateModified: article.updated_at || article.published_at,
-    mainEntityOfPage: `${baseUrl}/blog/${getSlug(article)}`,
+    mainEntityOfPage: `${baseUrl}/${language}/blog/${getSlug(article)}`,
   };
 
   return (
@@ -353,13 +354,11 @@ export function ArticlePage() {
                         <button
                           key={item.id}
                           onClick={() => scrollToSection(item.id)}
-                          className={`block w-full text-left py-2 px-3 rounded-lg transition-all text-sm ${
-                            item.level === 3 ? 'pl-6' : ''
-                          } ${
-                            activeSection === item.id
+                          className={`block w-full text-left py-2 px-3 rounded-lg transition-all text-sm ${item.level === 3 ? 'pl-6' : ''
+                            } ${activeSection === item.id
                               ? 'bg-gradient-to-r from-[var(--brand-pink)] to-[var(--brand-orange)] text-white font-semibold shadow-md'
                               : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                          }`}
+                            }`}
                         >
                           {item.text}
                         </button>
